@@ -1,0 +1,35 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+    provider = "prisma-client-js"
+    output   = "../generated/prisma"
+}
+
+datasource db {
+    provider = "sqlite"
+    url      = env("DATABASE_URL")
+}
+
+model FarmerProfile {
+    id          Int               @id @default(autoincrement())
+    name        String
+    district    String
+    zone        String
+    soilType    String
+    landSize    Float
+    crops       String            // Comma-separated list of selected crops
+    isIrrigated Boolean           @default(true)
+    createdAt   DateTime          @default(now())
+    updatedAt   DateTime          @updatedAt
+    logs        FarmActivityLog[]
+}
+
+model FarmActivityLog {
+    id        Int           @id @default(autoincrement())
+    profileId Int
+    category  String        // Sowing, Watering, Fertilizer, Pest, Harvest, Other
+    notes     String
+    timestamp DateTime      @default(now())
+    profile   FarmerProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+}

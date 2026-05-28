@@ -1,0 +1,119 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-outfit-sans), ui-sans-serif, system-ui, sans-serif,
+    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+
+  --animate-spin-slow: spin 16s linear infinite;
+  --animate-marquee: marquee 35s linear infinite;
+  --animate-marquee2: marquee2 35s linear infinite;
+
+  --color-secondary-container: #fe932c;
+  --color-on-error: #ffffff;
+  --color-inverse-primary: #95d4b1;
+  --color-surface: #f8faf7;
+  --color-error: #ba1a1a;
+  --color-inverse-on-surface: #eff1ee;
+  --color-clay-terracotta: #C2410C;
+  --color-surface-container-low: #f2f4f1;
+  --color-tertiary: #003523;
+  --color-on-tertiary: #ffffff;
+  --color-background-dark: #0F1912;
+  --color-primary-fixed: #b0f1cd;
+  --color-surface-container: #eceeeb;
+  --color-primary-container: #094e34;
+  --color-on-secondary-fixed-variant: #6e3900;
+  --color-error-container: #ffdad6;
+  --color-on-secondary-fixed: #2f1500;
+  --color-tertiary-container: #004e35;
+  --color-outline: #707972;
+  --color-on-tertiary-fixed: #002114;
+  --color-on-surface-variant: #404943;
+  --color-surface-container-highest: #e1e3e0;
+  --color-surface-variant: #e1e3e0;
+  --color-on-primary-container: #80be9d;
+  --color-surface-dim: #d8dbd8;
+  --color-secondary-fixed-dim: #ffb77d;
+  --color-on-secondary-container: #663500;
+  --color-secondary: #904d00;
+  --color-on-tertiary-container: #72c09b;
+  --color-on-primary-fixed-variant: #0e5137;
+  --color-surface-container-lowest: #ffffff;
+  --color-secondary-fixed: #ffdcc3;
+  --color-forest-light: #1B835E;
+  --color-surface-container-high: #e7e9e6;
+  --color-outline-variant: #bfc9c1;
+  --color-glass-stroke: rgba(255, 255, 255, 0.2);
+  --color-on-primary-fixed: #002113;
+  --color-primary: #003522;
+  --color-on-background: #191c1b;
+  --color-on-secondary: #ffffff;
+  --color-on-tertiary-fixed-variant: #005137;
+  --color-background: #f8faf7;
+  --color-on-primary: #ffffff;
+  --color-primary-fixed-dim: #95d4b1;
+  --color-surface-bright: #f8faf7;
+  --color-inverse-surface: #2e312f;
+  --color-tertiary-fixed: #a3f3cb;
+  --color-on-surface: #191c1b;
+  --color-tertiary-fixed-dim: #88d7b0;
+  --color-on-error-container: #93000a;
+  --color-surface-tint: #2c694d;
+
+  @keyframes marquee {
+    0% {
+      transform: translateX(0%);
+    }
+    100% {
+      transform: translateX(-100%);
+    }
+  }
+
+  @keyframes marquee2 {
+    0% {
+      transform: translateX(100%);
+    }
+    100% {
+      transform: translateX(0%);
+    }
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.6);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(16, 185, 129, 0.2);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(16, 185, 129, 0.4);
+}
+
+/* Base body styles */
+body {
+  scrollbar-gutter: stable;
+}
+
+.glass-panel {
+  background: rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
