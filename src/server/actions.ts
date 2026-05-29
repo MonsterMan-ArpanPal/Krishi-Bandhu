@@ -67,7 +67,8 @@ export async function askAI(
   profileId: number,
   weatherSim: string,
   message: string,
-  history: Array<{ role: "user" | "model"; text: string }>
+  history: Array<{ role: "user" | "model"; text: string }>,
+  language: "en" | "kn" = "en"
 ) {
   const profile = await db.farmerProfile.findUnique({
     where: { id: profileId },
@@ -87,7 +88,7 @@ export async function askAI(
     isIrrigated: profile.isIrrigated,
   };
 
-  return await askKrishiSakhi(context, weatherSim, message, history);
+  return await askKrishiSakhi(context, weatherSim, message, history, language);
 }
 
 export async function getAIAdvisory(profileId: number, weatherSim: string, language: "en" | "kn") {

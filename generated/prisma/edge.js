@@ -132,7 +132,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "/home/monsterman/myJunk/collegeStuff/hidProject/generated/prisma",
+      "value": "C:\\Users\\ss\\.gemini\\antigravity\\scratch\\Krishi-Bandhu\\generated\\prisma",
       "fromEnvVar": null
     },
     "config": {
@@ -141,12 +141,12 @@ const config = {
     "binaryTargets": [
       {
         "fromEnvVar": null,
-        "value": "debian-openssl-3.0.x",
+        "value": "windows",
         "native": true
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "/home/monsterman/myJunk/collegeStuff/hidProject/prisma/schema.prisma",
+    "sourceFilePath": "C:\\Users\\ss\\.gemini\\antigravity\\scratch\\Krishi-Bandhu\\prisma\\schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
