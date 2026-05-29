@@ -39,6 +39,12 @@ import {
   askAI,
   getAIAdvisory,
 } from "~/server/actions";
+import {
+  karnatakaDistricts,
+  cropOptions,
+  apmcPrices,
+  governmentSchemes,
+} from "~/data/shared-data";
 
 // Bilingual Dictionary matching the premium styling
 const t = {
@@ -98,6 +104,33 @@ const t = {
     tapToSpeak: "ಮಾತನಾಡಲು ಸ್ಪರ್ಶಿಸಿ",
     listening: "ಕೇಳಲಾಗುತ್ತಿದೆ...",
     treatmentGuide: "ಚಿಕಿತ್ಸಾ ಮಾರ್ಗದರ್ಶಿ ವೀಕ್ಷಿಸಿ",
+    farmAtAGlance: "ನಿಮ್ಮ ಕೃಷಿ ಒಂದು ನೋಟದಲ್ಲಿ.",
+    askSakhiDetails: "ಕೃಷಿ ಸಖಿಯ ಸಲಹೆ ಪಡೆಯಿರಿ",
+    activeChatContext: "ಸಕ್ರಿಯ ಚಾಟ್ ವಿಷಯ",
+    aiPowered: "ಆನ್‌ಲೈನ್ • ಜೆಮಿನಿ AI ಚಾಲಿತ",
+    activityLogDesc: "ನಿಮ್ಮ ಕೃಷಿ ಇತಿಹಾಸ ಮತ್ತು ಅವಲೋಕನಗಳು.",
+    profileDesc: "ಸಕ್ರಿಯ ರೈತರ ವಿವರಗಳು ಮತ್ತು ಸಂರಚನೆಗಳನ್ನು ನಿರ್ವಹಿಸಿ.",
+    soilProfile: "ಮಣ್ಣಿನ ವಿವರ",
+    activeCrops: "ಸಕ್ರಿಯ ಬೆಳೆಗಳು",
+    ttsOn: "ಧ್ವನಿ ಆನ್",
+    ttsOff: "ಧ್ವನಿ ಆಫ್",
+    weather: "ಹವಾಮಾನ",
+    humidity: "ಆರ್ದ್ರತೆ",
+    wind: "ಗಾಳಿ",
+    highSeverity: "ಹೆಚ್ಚಿನ ತೀವ್ರತೆ",
+    pestAlertTitle: "ಹಳದಿ ತುಕ್ಕು ಪತ್ತೆಯಾಗಿದೆ",
+    pestAlertSubtitle: "ಕೀಟ ಕಾಂಡ ಕೊರೆಯುವಿಕೆ ಮಂಡ್ಯ APMC ಸುತ್ತಮುತ್ತ ವರದಿಯಾಗಿದೆ",
+    infectionSpotted: "ಸೋಂಕು ಪತ್ತೆಯಾಗಿದೆ",
+    apmcFeed: "ಕರ್ನಾಟಕ APMC ಮಾಹಿತಿ",
+    eligibleProfile: "🎯 ಅರ್ಹ ಪ್ರೊಫೈಲ್",
+    acres: "ಎಕರೆ",
+    bilingualSupport: "ದ್ವಿಭಾಷಾ ಬೆಂಬಲ",
+    todayTime: "ಇಂದು",
+    farmAcreage: "ಕೃಷಿ ವಿಸ್ತೀರ್ಣ",
+    waterSupply: "ನೀರಿನ ಸರಬರಾಜು",
+    activityNavMobile: "ಚಟುವಟಿಕೆ",
+    logPlaceholder: "ಉದಾ: ೨ ಎಕರೆಯಲ್ಲಿ ರಾಗಿ ಬಿತ್ತಿದೆ...",
+    namePlaceholder: "ಉದಾ: ರಾಮಪ್ಪ ಗೌಡ",
   },
   en: {
     title: "Krishi Bandhu",
@@ -155,36 +188,37 @@ const t = {
     tapToSpeak: "Tap to Speak",
     listening: "Listening...",
     treatmentGuide: "View Treatment Guide",
+    farmAtAGlance: "Your farm at a glance.",
+    askSakhiDetails: "Ask Krishi Sakhi details",
+    activeChatContext: "Active Chat Context",
+    aiPowered: "Online • Gemini AI Powered",
+    activityLogDesc: "Your farm history and observations.",
+    profileDesc: "Manage active farmer credentials and configurations.",
+    soilProfile: "Soil Profile",
+    activeCrops: "Active Crops",
+    ttsOn: "Speech On",
+    ttsOff: "Muted",
+    weather: "Weather",
+    humidity: "Humidity",
+    wind: "Wind",
+    highSeverity: "High Severity",
+    pestAlertTitle: "Yellow Rust Detected",
+    pestAlertSubtitle: "Critical pest stem-borers reported near Mandya APMC region",
+    infectionSpotted: "Infection Spotted",
+    apmcFeed: "Karnataka APMC Feed",
+    eligibleProfile: "🎯 Eligible Profile",
+    acres: "Acres",
+    bilingualSupport: "Bilingual Support",
+    todayTime: "Today",
+    farmAcreage: "Farm Acreage",
+    waterSupply: "Water Supply",
+    activityNavMobile: "Activity",
+    logPlaceholder: "e.g. Sowed Ragi on 2 acres...",
+    namePlaceholder: "e.g. Ramappa Gowda",
   },
 };
 
-// Karnataka Districts with automatic Agro-Climatic Zone mapping
-const karnatakaDistricts = [
-  { name: "Mandya", zone: { en: "Southern Dry Zone", kn: "ದಕ್ಷಿಣ ಒಣ ವಲಯ" } },
-  { name: "Shivamogga", zone: { en: "Malnad / Hill Zone", kn: "ಮಲೆನಾಡು / ಗುಡ್ಡಗಾಡು ವಲಯ" } },
-  { name: "Vijayapura", zone: { en: "Northern Dry Zone", kn: "ಉತ್ತರ ಒಣ ವಲಯ" } },
-  { name: "Udupi", zone: { en: "Coastal Zone", kn: "ಕರಾವಳಿ ವಲಯ" } },
-  { name: "Chikmagalur", zone: { en: "Malnad / Hill Zone", kn: "ಮಲೆನಾಡು / ಗುಡ್ಡಗಾಡು ವಲಯ" } },
-  { name: "Kolar", zone: { en: "Eastern Dry Zone", kn: "ಪೂರ್ವ ಒಣ ವಲಯ" } },
-];
 
-const cropOptions = ["Ragi", "Sugarcane", "Jowar", "Paddy", "Coconut", "Arecanut", "Coffee"];
-
-// APMC Prices matching the mockup exactly
-const apmcPrices = [
-  { crop: { en: "Sugarcane (ಕಬ್ಬು)", kn: "ಕಬ್ಬು (Sugarcane)" }, market: { en: "Mandya APMC", kn: "ಮಂಡ್ಯ APMC" }, price: "₹3,200", unit: { en: "/ Ton", kn: "/ ಟನ್" }, trend: "up", time: { en: "Updated 2h ago", kn: "೨ ಗಂಟೆಗಳ ಹಿಂದೆ" } },
-  { crop: { en: "Ragi (ರಾಗಿ)", kn: "ರಾಗಿ (Ragi)" }, market: { en: "Mysuru APMC", kn: "ಮೈಸೂರು APMC" }, price: "₹3,800", unit: { en: "/ Qtl", kn: "/ ಕ್ವಿಂಟಾಲ್" }, trend: "stable", time: { en: "Updated 3h ago", kn: "೩ ಗಂಟೆಗಳ ಹಿಂದೆ" } },
-  { crop: { en: "Jowar (ಜೋಳ)", kn: "ಜೋಳ (Jowar)" }, market: { en: "Hassan APMC", kn: "ಹಾಸನ APMC" }, price: "₹2,950", unit: { en: "/ Qtl", kn: "/ ಕ್ವಿಂಟಾಲ್" }, trend: "down", time: { en: "Updated 1h ago", kn: "೧ ಗಂಟೆಯ ಹಿಂದೆ" } },
-  { crop: { en: "Arecanut (ಅಡಿಕೆ)", kn: "ಅಡಿಕೆ (Arecanut)" }, market: { en: "Shivamogga APMC", kn: "ಶಿವಮೊಗ್ಗ APMC" }, price: "₹48,500", unit: { en: "/ Qtl", kn: "/ ಕ್ವಿಂಟಾಲ್" }, trend: "up", time: { en: "Updated 4h ago", kn: "೪ ಗಂಟೆಗಳ ಹಿಂದೆ" } },
-];
-
-// Govt Schemes
-const governmentSchemes = [
-  { name: { en: "PM-KISAN: 17th Installment", kn: "ಪಿಎಂ-ಕಿಸಾನ್: ೧೭ನೇ ಕಂತು" }, deadline: { en: "Disbursed / Complete", kn: "ಪೂರ್ಣಗೊಂಡಿದೆ" } },
-  { name: { en: "Pradhan Mantri Fasal Bima Yojana (Crop Insurance)", kn: "ಪ್ರಧಾನ ಮಂತ್ರಿ ಫಸಲ್ ಬಿಮಾ ಯೋಜನೆ (ಬೆಳೆ ವಿಮೆ)" }, deadline: { en: "Apply before July 31st", kn: "ಜುಲೈ ೩೧ ರ ಒಳಗೆ" } },
-  { name: { en: "Krishi Bhagya: Farm Pond Subsidy (Karnataka Govt)", kn: "ಕೃಷಿ ಭಾಗ್ಯ: ಕೃಷಿ ಹೊಂಡ ಸಬ್ಸಿಡಿ ಯೋಜನೆ" }, deadline: { en: "Ongoing registration", kn: "ನೋಂದಣಿ ಚಾಲನೆಯಲ್ಲಿದೆ" } },
-  { name: { en: "Ganga Kalyana: Free Borewell & Pump scheme", kn: "ಗಂಗಾ ಕಲ್ಯಾಣ: ಉಚಿತ ಕೊಳವೆ ಬಾವಿ ಯೋಜನೆ" }, deadline: { en: "Apply by June 30th", kn: "ಜೂನ್ ೩೦ ರ ಒಳಗೆ" } },
-];
 
 interface FarmerProfile {
   id: number;
@@ -245,6 +279,26 @@ export default function HomePage() {
   const [speechError, setSpeechError] = useState<string | null>(null);
 
   const chatEndRef = useRef<HTMLDivElement>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const recognitionRef = useRef<any>(null);
+
+  // Speech and TTS cleanup on unmount or tab switch
+  useEffect(() => {
+    return () => {
+      /* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call */
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop();
+        } catch (e) {
+          console.warn("Failed to stop speech recognition:", e);
+        }
+      }
+      /* eslint-enable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call */
+      if (typeof window !== "undefined" && "speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, [activeTab]);
 
   // Fetch initial profiles on load
   useEffect(() => {
@@ -386,9 +440,46 @@ export default function HomePage() {
     if (typeof window !== "undefined" && "speechSynthesis" in window) {
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = lang === "kn" ? "kn-IN" : "en-IN";
+      
+      if (lang === "kn") {
+        const voices = window.speechSynthesis.getVoices();
+        const knVoice = voices.find(v => v.lang.startsWith("kn") || v.name.toLowerCase().includes("kannada"));
+        if (knVoice) {
+          utterance.voice = knVoice;
+        }
+        utterance.lang = "kn-IN";
+      } else {
+        const voices = window.speechSynthesis.getVoices();
+        const enVoice = voices.find(v => v.lang.startsWith("en") && (v.name.includes("India") || v.lang.includes("IN")));
+        if (enVoice) {
+          utterance.voice = enVoice;
+        }
+        utterance.lang = "en-IN";
+      }
+      
       window.speechSynthesis.speak(utterance);
     }
+  };
+
+  const getDisplayMessageText = (msg: { role: "user" | "model"; text: string }, idx: number) => {
+    if (idx === 0) {
+      const primaryCrop = activeProfile?.crops ? activeProfile.crops.split(",")[0] : "";
+      if (lang === "kn") {
+        const cropText = primaryCrop === "Sugarcane" ? "ಕಬ್ಬಿನ" : 
+                         primaryCrop === "Ragi" ? "ರಾಗಿ" : 
+                         primaryCrop === "Jowar" ? "ಜೋಳದ" : 
+                         primaryCrop === "Paddy" ? "ಭತ್ತದ" : 
+                         primaryCrop === "Coconut" ? "ತೆಂಗಿನ" : 
+                         primaryCrop === "Arecanut" ? "ಅಡಿಕೆ" : 
+                         primaryCrop === "Coffee" ? "ಕಾಫಿ" : "ಕೃಷಿ";
+        return `ನಮಸ್ಕಾರ! ನಿಮ್ಮ ${cropText} ಬೆಳೆಗೆ ನಾನು ಹೇಗೆ ಸಹಾಯ ಮಾಡಬಲ್ಲೆ?`;
+      } else {
+        // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+        const cropText = primaryCrop || "crops";
+        return `Namaskara! How can I help with your ${cropText} crop today?`;
+      }
+    }
+    return msg.text;
   };
 
   // Send Conversational Chat
@@ -403,14 +494,11 @@ export default function HomePage() {
 
     try {
       const weatherText = getWeatherText(weatherSim, lang);
-      const answer = await askAI(activeProfile.id, weatherText, input, messages);
+      const answer = await askAI(activeProfile.id, weatherText, input, messages, lang);
       setMessages((prev) => [...prev, { role: "model", text: answer }]);
 
-      if (ttsEnabled && typeof window !== "undefined" && "speechSynthesis" in window) {
-        window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(answer);
-        utterance.lang = lang === "kn" ? "kn-IN" : "en-IN";
-        window.speechSynthesis.speak(utterance);
+      if (ttsEnabled) {
+        handleSpeakMessage(answer);
       }
     } catch (err) {
       console.error("Chat error:", err);
@@ -421,7 +509,7 @@ export default function HomePage() {
 
   // Speech-to-Text handler
   const handleStartSpeech = () => {
-    /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument, @typescript-eslint/prefer-nullish-coalescing */
+    /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call */
     if (typeof window !== "undefined") {
       const SpeechRecognition =
         (window as any).SpeechRecognition ?? (window as any).webkitSpeechRecognition;
@@ -435,11 +523,19 @@ export default function HomePage() {
       }
 
       if (isListening) {
+        if (recognitionRef.current) {
+          try {
+            recognitionRef.current.stop();
+          } catch (e) {
+            console.warn("Failed to stop recognition:", e);
+          }
+        }
         setIsListening(false);
         return;
       }
 
       const recognition = new SpeechRecognition();
+      recognitionRef.current = recognition;
       recognition.continuous = false;
       recognition.interimResults = false;
       recognition.lang = lang === "kn" ? "kn-IN" : "en-IN";
@@ -469,6 +565,7 @@ export default function HomePage() {
 
       recognition.onend = () => {
         setIsListening(false);
+        recognitionRef.current = null;
       };
 
       recognition.onresult = (event: any) => {
@@ -481,7 +578,7 @@ export default function HomePage() {
 
       recognition.start();
     }
-    /* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument, @typescript-eslint/prefer-nullish-coalescing */
+    /* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call */
   };
 
   const getGreeting = () => {
@@ -654,9 +751,9 @@ export default function HomePage() {
                   {getGreeting()}
                 </h2>
                 <p className="text-sm text-[#404943] mt-1 font-semibold flex items-center gap-1">
-                  <span>ನಮಸ್ಕಾರ, {activeProfile?.name ?? "ರೈತರೇ"}</span>
+                  <span>{lang === "kn" ? `ನಮಸ್ಕಾರ, ${activeProfile?.name ?? "ರೈತರೇ"}` : `Namaskara, ${activeProfile?.name ?? "Farmer"}`}</span>
                   <span className="h-1 w-1 rounded-full bg-[#404943]/20" />
-                  <span>Your farm at a glance.</span>
+                  <span>{t[lang].farmAtAGlance}</span>
                 </p>
               </div>
 
@@ -676,7 +773,7 @@ export default function HomePage() {
                         {weatherSim === "dry" && <Sun className="text-amber-500 animate-spin-slow" />}
                         {weatherSim === "pest" && <Bug className="text-red-500 animate-bounce" />}
                         <span className="font-semibold text-xs text-[#904d00] uppercase tracking-wider">
-                          {activeProfile?.district ?? "Mandya"} Weather
+                          {activeProfile?.district ?? "Mandya"} {t[lang].weather}
                         </span>
                       </div>
 
@@ -701,14 +798,14 @@ export default function HomePage() {
                           {weatherSim === "sunny" && "65%"}
                           {weatherSim === "rainy" && "95%"}
                           {weatherSim === "dry" && "30%"}
-                          {weatherSim === "pest" && "70%"} Humidity
+                          {weatherSim === "pest" && "70%"} {t[lang].humidity}
                         </span>
                         <span className="flex items-center gap-1">
                           <Sprout size={14} className="text-[#1B835E]" />
-                          {weatherSim === "sunny" && "12 km/h Wind"}
-                          {weatherSim === "rainy" && "28 km/h Wind"}
-                          {weatherSim === "dry" && "6 km/h Wind"}
-                          {weatherSim === "pest" && "10 km/h Wind"}
+                          {weatherSim === "sunny" && `12 km/h ${t[lang].wind}`}
+                          {weatherSim === "rainy" && `28 km/h ${t[lang].wind}`}
+                          {weatherSim === "dry" && `6 km/h ${t[lang].wind}`}
+                          {weatherSim === "pest" && `10 km/h ${t[lang].wind}`}
                         </span>
                       </div>
                     </div>
@@ -798,7 +895,7 @@ export default function HomePage() {
                       onClick={() => setActiveTab("chat")}
                       className="mt-4 flex items-center justify-between text-xs font-bold text-[#1B835E] hover:underline pt-2 border-t border-glass-stroke"
                     >
-                      <span>Ask Krishi Sakhi details</span>
+                      <span>{t[lang].askSakhiDetails}</span>
                       <ChevronRight size={14} />
                     </button>
                   </div>
@@ -811,12 +908,12 @@ export default function HomePage() {
                   <div className="space-y-4">
                     <span className="bg-error text-on-error font-bold text-[10px] px-3 py-1 rounded-full flex items-center gap-1 w-max uppercase tracking-wider shadow-sm">
                       <AlertTriangle size={12} />
-                      High Severity
+                      {t[lang].highSeverity}
                     </span>
                     
                     <div>
                       <h3 className="text-lg font-bold text-[#191c1b]">
-                        {weatherSim === "pest" ? "Infection Spotted" : "Yellow Rust Detected"}
+                        {weatherSim === "pest" ? t[lang].infectionSpotted : t[lang].pestAlertTitle}
                       </h3>
                       <p className="text-xs font-semibold text-[#404943] mt-1.5 leading-relaxed">
                         {weatherSim === "pest" 
@@ -847,7 +944,7 @@ export default function HomePage() {
                       <Store size={18} className="text-[#1B835E]" />
                       <h3 className="text-sm font-extrabold text-[#191c1b] uppercase tracking-wider">{t[lang].priceTicker}</h3>
                     </div>
-                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Karnataka APMC Feed</span>
+                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{t[lang].apmcFeed}</span>
                   </div>
 
                   <div className="flex overflow-x-auto gap-4 pb-2 snap-x hide-scrollbar scroll-smooth">
@@ -893,7 +990,7 @@ export default function HomePage() {
                         <div className="space-y-1">
                           <h4 className="text-xs font-bold text-[#191c1b] leading-snug">{scheme.name[lang]}</h4>
                           <span className="text-[9px] font-bold text-[#1B835E] bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-500/10 inline-block shadow-sm">
-                            🎯 Eligible Profile
+                            {t[lang].eligibleProfile}
                           </span>
                         </div>
 
@@ -918,7 +1015,7 @@ export default function HomePage() {
               {/* Dynamic Context Header */}
               <div className="bg-white/80 backdrop-blur-md border border-glass-stroke rounded-xl p-4 shadow-sm flex items-center justify-between">
                 <div className="flex flex-col gap-1">
-                  <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Active Chat Context</span>
+                  <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">{t[lang].activeChatContext}</span>
                   <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
                     <span className="bg-emerald-50 border border-emerald-500/20 text-[#1B835E] font-bold text-[10px] px-2.5 py-0.5 rounded-full shadow-sm">
                       🌾 {activeProfile?.crops.split(",")[0] ?? "Sugarcane"}
@@ -928,7 +1025,7 @@ export default function HomePage() {
                       {activeProfile?.district ?? "Mandya"}
                     </span>
                     <span className="bg-slate-100 text-slate-600 font-bold text-[10px] px-2.5 py-0.5 rounded-full border border-slate-200/40 shadow-sm">
-                      📐 {activeProfile?.landSize ?? "5"} Acres
+                      📐 {activeProfile?.landSize ?? "5"} {t[lang].acres}
                     </span>
                   </div>
                 </div>
@@ -943,7 +1040,7 @@ export default function HomePage() {
                     }`}
                   >
                     {ttsEnabled ? <Volume2 size={14} /> : <VolumeX size={14} />}
-                    <span>{ttsEnabled ? "Speech On" : "Muted"}</span>
+                    <span>{ttsEnabled ? t[lang].ttsOn : t[lang].ttsOff}</span>
                   </button>
                 </div>
               </div>
@@ -959,18 +1056,18 @@ export default function HomePage() {
                     </div>
                     <div>
                       <h3 className="font-bold text-[#191c1b] text-sm">{t[lang].chat}</h3>
-                      <p className="text-[10px] font-bold text-[#1B835E]">Online • Gemini AI Powered</p>
+                      <p className="text-[10px] font-bold text-[#1B835E]">{t[lang].aiPowered}</p>
                     </div>
                   </div>
 
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Bilingual Support</span>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t[lang].bilingualSupport}</span>
                 </div>
 
                 {/* Message lists viewport */}
                 <div className="flex-1 overflow-y-auto p-6 space-y-5 bg-[#fcfbfa]/80">
                   <div className="flex justify-center">
                     <span className="bg-[#eceeeb] border border-glass-stroke text-slate-500 font-bold text-[10px] px-3 py-1 rounded-full shadow-sm">
-                      Today, 9:41 AM
+                      {t[lang].todayTime}, 9:41 AM
                     </span>
                   </div>
 
@@ -998,12 +1095,12 @@ export default function HomePage() {
                                 : "glass-panel bg-white text-[#191c1b] rounded-tl-none border border-slate-200/50"
                             }`}
                           >
-                            <p className="whitespace-pre-line">{msg.text}</p>
+                            <p className="whitespace-pre-line">{getDisplayMessageText(msg, idx)}</p>
                           </div>
 
                           {msg.role === "model" && (
                             <button
-                              onClick={() => handleSpeakMessage(msg.text)}
+                              onClick={() => handleSpeakMessage(getDisplayMessageText(msg, idx))}
                               className="p-1 rounded-lg bg-white border border-glass-stroke text-slate-400 hover:text-[#1B835E] hover:border-[#1B835E]/30 transition-colors shrink-0 self-start mt-0.5 ml-1 active:scale-90 shadow-sm"
                             >
                               <Volume2 size={13} />
@@ -1082,7 +1179,7 @@ export default function HomePage() {
                   <div className="absolute inset-0 rounded-full shadow-[inset_0_0_15px_rgba(255,255,255,0.4)] pointer-events-none" />
                 </button>
                 <p className="font-bold text-sm text-[#191c1b] bg-white/60 px-4 py-1.5 rounded-full backdrop-blur-sm border border-glass-stroke shadow-sm">
-                  {isListening ? "Listening..." : "Tap to Speak"}
+                  {isListening ? t[lang].listening : t[lang].tapToSpeak}
                 </p>
                 {speechError && (
                   <p className="mt-2.5 text-xs text-red-600 bg-red-50/90 px-3.5 py-2 rounded-lg border border-red-200 text-center max-w-[320px] shadow-sm font-semibold relative">
@@ -1108,7 +1205,7 @@ export default function HomePage() {
               
               <div>
                 <h2 className="text-3xl font-bold text-[#191c1b]">{t[lang].activityLog}</h2>
-                <p className="text-sm font-semibold text-[#404943] mt-1">Your farm history and observations.</p>
+                <p className="text-sm font-semibold text-[#404943] mt-1">{t[lang].activityLogDesc}</p>
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -1181,7 +1278,7 @@ export default function HomePage() {
                         required
                         onChange={(e) => setLogNotes(e.target.value)}
                         className="w-full h-24 rounded-xl border border-glass-stroke bg-slate-50 px-3.5 py-2.5 text-xs font-bold text-[#404943] outline-none focus:border-[#1B835E] focus:bg-white resize-none transition-all"
-                        placeholder="e.g. Sowed Ragi on 2 acres..."
+                        placeholder={t[lang].logPlaceholder}
                       />
                     </div>
 
@@ -1340,7 +1437,7 @@ export default function HomePage() {
               
               <div>
                 <h2 className="text-3xl font-bold text-[#191c1b]">{t[lang].myProfile}</h2>
-                <p className="text-sm font-semibold text-[#404943] mt-1">Manage active farmer credentials and configurations.</p>
+                <p className="text-sm font-semibold text-[#404943] mt-1">{t[lang].profileDesc}</p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
@@ -1368,22 +1465,22 @@ export default function HomePage() {
 
                         <div className="mt-4 pt-4 border-t border-glass-stroke text-xs font-semibold text-[#404943] grid grid-cols-2 gap-4 text-left">
                           <div>
-                            <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">Soil Profile</span>
+                            <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">{t[lang].soilProfile}</span>
                             <span className="font-bold text-[#191c1b]">{activeProfile.soilType}</span>
                           </div>
                           <div>
-                            <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">Farm Acreage</span>
+                            <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">{t[lang].farmAcreage}</span>
                             <span className="font-bold text-[#191c1b]">{activeProfile.landSize} Acres</span>
                           </div>
                           <div className="col-span-2">
-                            <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">Water Supply</span>
+                            <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">{t[lang].waterSupply}</span>
                             <span className={`inline-flex items-center gap-1 font-bold text-xs ${activeProfile.isIrrigated ? "text-[#1B835E]" : "text-[#904d00]"}`}>
                               <span className={`h-2.5 w-2.5 rounded-full ${activeProfile.isIrrigated ? "bg-[#1B835E]" : "bg-[#fe932c]"}`} />
-                              {activeProfile.isIrrigated ? "Canal & Borewell (Irrigated)" : "Rainfed"}
+                              {activeProfile.isIrrigated ? t[lang].irrigated : t[lang].rainfed}
                             </span>
                           </div>
                           <div className="col-span-2">
-                            <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">Active Crops</span>
+                            <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">{t[lang].activeCrops}</span>
                             <div className="flex flex-wrap gap-1 mt-1.5">
                               {activeProfile.crops.split(",").map((crop, idx) => (
                                 <span key={idx} className="bg-slate-100 px-2.5 py-1 rounded-full text-[10px] font-bold text-slate-600 border border-slate-200/50 shadow-sm">
@@ -1426,7 +1523,7 @@ export default function HomePage() {
                         value={profileForm.name}
                         onChange={handleFormChange}
                         className="w-full rounded-xl border border-glass-stroke bg-slate-50 px-3.5 py-2.5 text-xs font-bold text-[#191c1b] outline-none focus:border-[#1B835E] focus:bg-white min-h-[44px]"
-                        placeholder="e.g. Ramappa Gowda"
+                        placeholder={t[lang].namePlaceholder}
                       />
                     </div>
 
@@ -1589,7 +1686,7 @@ export default function HomePage() {
             }`}
           >
             <MessageSquare size={20} className={activeTab === "chat" ? "fill-[#2f1500]/10" : ""} />
-            <span className="text-[10px] font-bold mt-1">Chat</span>
+            <span className="text-[10px] font-bold mt-1">{t[lang].chat}</span>
           </button>
 
           <button 
@@ -1601,7 +1698,7 @@ export default function HomePage() {
             }`}
           >
             <History size={20} />
-            <span className="text-[10px] font-bold mt-1">Activity</span>
+            <span className="text-[10px] font-bold mt-1">{t[lang].activityNavMobile}</span>
           </button>
 
           <button 
@@ -1613,7 +1710,7 @@ export default function HomePage() {
             }`}
           >
             <User size={20} className={activeTab === "profile" ? "fill-[#2f1500]/10" : ""} />
-            <span className="text-[10px] font-bold mt-1">Profile</span>
+            <span className="text-[10px] font-bold mt-1">{t[lang].myProfile}</span>
           </button>
         </nav>
 
