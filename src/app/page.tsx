@@ -300,6 +300,20 @@ export default function HomePage() {
     };
   }, [activeTab]);
 
+  // Preload browser speech synthesis voices on mount to ensure voice lists are populated
+  useEffect(() => {
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
+      window.speechSynthesis.getVoices();
+      const handleVoicesChanged = () => {
+        window.speechSynthesis.getVoices();
+      };
+      window.speechSynthesis.addEventListener("voiceschanged", handleVoicesChanged);
+      return () => {
+        window.speechSynthesis.removeEventListener("voiceschanged", handleVoicesChanged);
+      };
+    }
+  }, []);
+
   // Fetch initial profiles on load
   useEffect(() => {
     async function loadData() {
