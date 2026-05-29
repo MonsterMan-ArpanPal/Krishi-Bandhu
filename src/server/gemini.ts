@@ -85,7 +85,7 @@ export async function askKrishiSakhi(
   language: "en" | "kn" = "en"
 ): Promise<string> {
   const modelsToTry = [
-    { name: "gemini-1.5-flash", apiVersion: "v1" as const },
+    { name: "gemini-1.5-flash", apiVersion: "v1beta" as const },
     { name: "gemini-2.5-flash", apiVersion: "v1beta" as const },
     { name: "gemini-2.5-flash-lite", apiVersion: "v1beta" as const }
   ];
@@ -148,7 +148,7 @@ export async function getProactiveAdvisory(
   language: "en" | "kn"
 ): Promise<string> {
   const modelsToTry = [
-    { name: "gemini-1.5-flash", apiVersion: "v1" as const },
+    { name: "gemini-1.5-flash", apiVersion: "v1beta" as const },
     { name: "gemini-2.5-flash", apiVersion: "v1beta" as const },
     { name: "gemini-2.5-flash-lite", apiVersion: "v1beta" as const }
   ];
