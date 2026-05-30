@@ -132,21 +132,21 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "/home/monsterman/myJunk/collegeStuff/hidProject/generated/prisma",
+      "value": "D:/hidProject/Krishi-Bandhu/generated/prisma",
       "fromEnvVar": null
-    },
+    },    
     "config": {
       "engineType": "library"
     },
     "binaryTargets": [
       {
         "fromEnvVar": null,
-        "value": "debian-openssl-3.0.x",
+        "value": "windows",
         "native": true
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "/home/monsterman/myJunk/collegeStuff/hidProject/prisma/schema.prisma",
+    "sourceFilePath": "D:\\hidProject\\Krishi-Bandhu\\prisma\\schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
