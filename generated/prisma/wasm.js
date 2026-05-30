@@ -87,11 +87,15 @@ Prisma.NullTypes = {
  * Enums
  */
 exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
+  ReadUncommitted: 'ReadUncommitted',
+  ReadCommitted: 'ReadCommitted',
+  RepeatableRead: 'RepeatableRead',
   Serializable: 'Serializable'
 });
 
 exports.Prisma.FarmerProfileScalarFieldEnum = {
   id: 'id',
+  userId: 'userId',
   name: 'name',
   district: 'district',
   zone: 'zone',
@@ -114,6 +118,11 @@ exports.Prisma.FarmActivityLogScalarFieldEnum = {
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
+};
+
+exports.Prisma.QueryMode = {
+  default: 'default',
+  insensitive: 'insensitive'
 };
 
 
@@ -159,7 +168,8 @@ const config = {
   "datasourceNames": [
     "db"
   ],
-  "activeProvider": "sqlite",
+  "activeProvider": "postgresql",
+  "postinstall": false,
   "inlineDatasources": {
     "db": {
       "url": {
@@ -168,13 +178,13 @@ const config = {
       }
     }
   },
-  "inlineSchema": "// This is your Prisma schema file,\n// learn more about it in the docs: https://pris.ly/d/prisma-schema\n\ngenerator client {\n  provider = \"prisma-client-js\"\n  output   = \"../generated/prisma\"\n}\n\ndatasource db {\n  provider = \"sqlite\"\n  url      = env(\"DATABASE_URL\")\n}\n\nmodel FarmerProfile {\n  id          Int               @id @default(autoincrement())\n  name        String\n  district    String\n  zone        String\n  soilType    String\n  landSize    Float\n  crops       String // Comma-separated list of selected crops\n  isIrrigated Boolean           @default(true)\n  createdAt   DateTime          @default(now())\n  updatedAt   DateTime          @updatedAt\n  logs        FarmActivityLog[]\n}\n\nmodel FarmActivityLog {\n  id        Int           @id @default(autoincrement())\n  profileId Int\n  category  String // Sowing, Watering, Fertilizer, Pest, Harvest, Other\n  notes     String\n  timestamp DateTime      @default(now())\n  profile   FarmerProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)\n}\n",
-  "inlineSchemaHash": "8562a90c94f2b0cbf9e52ef0aa77ecbc23d7208b5b003e7c3ecfc4f7472bee2f",
+  "inlineSchema": "// This is your Prisma schema file,\n// learn more about it in the docs: https://pris.ly/d/prisma-schema\n\ngenerator client {\n  provider = \"prisma-client-js\"\n  output   = \"../generated/prisma\"\n}\n\ndatasource db {\n  provider  = \"postgresql\"\n  url       = env(\"DATABASE_URL\")\n  directUrl = env(\"DIRECT_URL\")\n}\n\nmodel FarmerProfile {\n  id          Int               @id @default(autoincrement())\n  userId      String\n  name        String\n  district    String\n  zone        String\n  soilType    String\n  landSize    Float\n  crops       String // Comma-separated list of selected crops\n  isIrrigated Boolean           @default(true)\n  createdAt   DateTime          @default(now())\n  updatedAt   DateTime          @updatedAt\n  logs        FarmActivityLog[]\n}\n\nmodel FarmActivityLog {\n  id        Int           @id @default(autoincrement())\n  profileId Int\n  category  String // Sowing, Watering, Fertilizer, Pest, Harvest, Other\n  notes     String\n  timestamp DateTime      @default(now())\n  profile   FarmerProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)\n}\n",
+  "inlineSchemaHash": "b3c42f65a1fae2970c7818b0b91560dc1fb8d62d00f7273d8e0d4931a72bd75c",
   "copyEngine": true
 }
 config.dirname = '/'
 
-config.runtimeDataModel = JSON.parse("{\"models\":{\"FarmerProfile\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"district\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"zone\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"soilType\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"landSize\",\"kind\":\"scalar\",\"type\":\"Float\"},{\"name\":\"crops\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"isIrrigated\",\"kind\":\"scalar\",\"type\":\"Boolean\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"logs\",\"kind\":\"object\",\"type\":\"FarmActivityLog\",\"relationName\":\"FarmActivityLogToFarmerProfile\"}],\"dbName\":null},\"FarmActivityLog\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"profileId\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"category\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"notes\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"timestamp\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"profile\",\"kind\":\"object\",\"type\":\"FarmerProfile\",\"relationName\":\"FarmActivityLogToFarmerProfile\"}],\"dbName\":null}},\"enums\":{},\"types\":{}}")
+config.runtimeDataModel = JSON.parse("{\"models\":{\"FarmerProfile\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"userId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"district\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"zone\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"soilType\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"landSize\",\"kind\":\"scalar\",\"type\":\"Float\"},{\"name\":\"crops\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"isIrrigated\",\"kind\":\"scalar\",\"type\":\"Boolean\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"logs\",\"kind\":\"object\",\"type\":\"FarmActivityLog\",\"relationName\":\"FarmActivityLogToFarmerProfile\"}],\"dbName\":null},\"FarmActivityLog\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"profileId\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"category\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"notes\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"timestamp\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"profile\",\"kind\":\"object\",\"type\":\"FarmerProfile\",\"relationName\":\"FarmActivityLogToFarmerProfile\"}],\"dbName\":null}},\"enums\":{},\"types\":{}}")
 defineDmmfProperty(exports.Prisma, config.runtimeDataModel)
 config.engineWasm = {
   getRuntime: async () => require('./query_engine_bg.js'),
