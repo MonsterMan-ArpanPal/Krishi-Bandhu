@@ -1006,6 +1006,7 @@ export namespace Prisma {
 
   export type FarmerProfileMinAggregateOutputType = {
     id: number | null
+    userId: string | null
     name: string | null
     district: string | null
     zone: string | null
@@ -1019,6 +1020,7 @@ export namespace Prisma {
 
   export type FarmerProfileMaxAggregateOutputType = {
     id: number | null
+    userId: string | null
     name: string | null
     district: string | null
     zone: string | null
@@ -1032,6 +1034,7 @@ export namespace Prisma {
 
   export type FarmerProfileCountAggregateOutputType = {
     id: number
+    userId: number
     name: number
     district: number
     zone: number
@@ -1057,6 +1060,7 @@ export namespace Prisma {
 
   export type FarmerProfileMinAggregateInputType = {
     id?: true
+    userId?: true
     name?: true
     district?: true
     zone?: true
@@ -1070,6 +1074,7 @@ export namespace Prisma {
 
   export type FarmerProfileMaxAggregateInputType = {
     id?: true
+    userId?: true
     name?: true
     district?: true
     zone?: true
@@ -1083,6 +1088,7 @@ export namespace Prisma {
 
   export type FarmerProfileCountAggregateInputType = {
     id?: true
+    userId?: true
     name?: true
     district?: true
     zone?: true
@@ -1183,6 +1189,7 @@ export namespace Prisma {
 
   export type FarmerProfileGroupByOutputType = {
     id: number
+    userId: string
     name: string
     district: string
     zone: string
@@ -1215,6 +1222,7 @@ export namespace Prisma {
 
   export type FarmerProfileSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    userId?: boolean
     name?: boolean
     district?: boolean
     zone?: boolean
@@ -1230,6 +1238,7 @@ export namespace Prisma {
 
   export type FarmerProfileSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    userId?: boolean
     name?: boolean
     district?: boolean
     zone?: boolean
@@ -1243,6 +1252,7 @@ export namespace Prisma {
 
   export type FarmerProfileSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    userId?: boolean
     name?: boolean
     district?: boolean
     zone?: boolean
@@ -1256,6 +1266,7 @@ export namespace Prisma {
 
   export type FarmerProfileSelectScalar = {
     id?: boolean
+    userId?: boolean
     name?: boolean
     district?: boolean
     zone?: boolean
@@ -1267,7 +1278,7 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type FarmerProfileOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "district" | "zone" | "soilType" | "landSize" | "crops" | "isIrrigated" | "createdAt" | "updatedAt", ExtArgs["result"]["farmerProfile"]>
+  export type FarmerProfileOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "name" | "district" | "zone" | "soilType" | "landSize" | "crops" | "isIrrigated" | "createdAt" | "updatedAt", ExtArgs["result"]["farmerProfile"]>
   export type FarmerProfileInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     logs?: boolean | FarmerProfile$logsArgs<ExtArgs>
     _count?: boolean | FarmerProfileCountOutputTypeDefaultArgs<ExtArgs>
@@ -1282,6 +1293,7 @@ export namespace Prisma {
     }
     scalars: $Extensions.GetPayloadResult<{
       id: number
+      userId: string
       name: string
       district: string
       zone: string
@@ -1716,6 +1728,7 @@ export namespace Prisma {
    */
   interface FarmerProfileFieldRefs {
     readonly id: FieldRef<"FarmerProfile", 'Int'>
+    readonly userId: FieldRef<"FarmerProfile", 'String'>
     readonly name: FieldRef<"FarmerProfile", 'String'>
     readonly district: FieldRef<"FarmerProfile", 'String'>
     readonly zone: FieldRef<"FarmerProfile", 'String'>
@@ -1954,6 +1967,7 @@ export namespace Prisma {
      * The data used to create many FarmerProfiles.
      */
     data: FarmerProfileCreateManyInput | FarmerProfileCreateManyInput[]
+    skipDuplicates?: boolean
   }
 
   /**
@@ -1972,6 +1986,7 @@ export namespace Prisma {
      * The data used to create many FarmerProfiles.
      */
     data: FarmerProfileCreateManyInput | FarmerProfileCreateManyInput[]
+    skipDuplicates?: boolean
   }
 
   /**
@@ -3064,6 +3079,7 @@ export namespace Prisma {
      * The data used to create many FarmActivityLogs.
      */
     data: FarmActivityLogCreateManyInput | FarmActivityLogCreateManyInput[]
+    skipDuplicates?: boolean
   }
 
   /**
@@ -3082,6 +3098,7 @@ export namespace Prisma {
      * The data used to create many FarmActivityLogs.
      */
     data: FarmActivityLogCreateManyInput | FarmActivityLogCreateManyInput[]
+    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -3252,6 +3269,9 @@ export namespace Prisma {
    */
 
   export const TransactionIsolationLevel: {
+    ReadUncommitted: 'ReadUncommitted',
+    ReadCommitted: 'ReadCommitted',
+    RepeatableRead: 'RepeatableRead',
     Serializable: 'Serializable'
   };
 
@@ -3260,6 +3280,7 @@ export namespace Prisma {
 
   export const FarmerProfileScalarFieldEnum: {
     id: 'id',
+    userId: 'userId',
     name: 'name',
     district: 'district',
     zone: 'zone',
@@ -3293,6 +3314,14 @@ export namespace Prisma {
   export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
 
 
+  export const QueryMode: {
+    default: 'default',
+    insensitive: 'insensitive'
+  };
+
+  export type QueryMode = (typeof QueryMode)[keyof typeof QueryMode]
+
+
   /**
    * Field references
    */
@@ -3306,6 +3335,13 @@ export namespace Prisma {
 
 
   /**
+   * Reference to a field of type 'Int[]'
+   */
+  export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
+    
+
+
+  /**
    * Reference to a field of type 'String'
    */
   export type StringFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'String'>
@@ -3313,9 +3349,23 @@ export namespace Prisma {
 
 
   /**
+   * Reference to a field of type 'String[]'
+   */
+  export type ListStringFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'String[]'>
+    
+
+
+  /**
    * Reference to a field of type 'Float'
    */
   export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
+    
+
+
+  /**
+   * Reference to a field of type 'Float[]'
+   */
+  export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
     
 
 
@@ -3331,6 +3381,13 @@ export namespace Prisma {
    */
   export type DateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime'>
     
+
+
+  /**
+   * Reference to a field of type 'DateTime[]'
+   */
+  export type ListDateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime[]'>
+    
   /**
    * Deep Input Types
    */
@@ -3341,6 +3398,7 @@ export namespace Prisma {
     OR?: FarmerProfileWhereInput[]
     NOT?: FarmerProfileWhereInput | FarmerProfileWhereInput[]
     id?: IntFilter<"FarmerProfile"> | number
+    userId?: StringFilter<"FarmerProfile"> | string
     name?: StringFilter<"FarmerProfile"> | string
     district?: StringFilter<"FarmerProfile"> | string
     zone?: StringFilter<"FarmerProfile"> | string
@@ -3355,6 +3413,7 @@ export namespace Prisma {
 
   export type FarmerProfileOrderByWithRelationInput = {
     id?: SortOrder
+    userId?: SortOrder
     name?: SortOrder
     district?: SortOrder
     zone?: SortOrder
@@ -3372,6 +3431,7 @@ export namespace Prisma {
     AND?: FarmerProfileWhereInput | FarmerProfileWhereInput[]
     OR?: FarmerProfileWhereInput[]
     NOT?: FarmerProfileWhereInput | FarmerProfileWhereInput[]
+    userId?: StringFilter<"FarmerProfile"> | string
     name?: StringFilter<"FarmerProfile"> | string
     district?: StringFilter<"FarmerProfile"> | string
     zone?: StringFilter<"FarmerProfile"> | string
@@ -3386,6 +3446,7 @@ export namespace Prisma {
 
   export type FarmerProfileOrderByWithAggregationInput = {
     id?: SortOrder
+    userId?: SortOrder
     name?: SortOrder
     district?: SortOrder
     zone?: SortOrder
@@ -3407,6 +3468,7 @@ export namespace Prisma {
     OR?: FarmerProfileScalarWhereWithAggregatesInput[]
     NOT?: FarmerProfileScalarWhereWithAggregatesInput | FarmerProfileScalarWhereWithAggregatesInput[]
     id?: IntWithAggregatesFilter<"FarmerProfile"> | number
+    userId?: StringWithAggregatesFilter<"FarmerProfile"> | string
     name?: StringWithAggregatesFilter<"FarmerProfile"> | string
     district?: StringWithAggregatesFilter<"FarmerProfile"> | string
     zone?: StringWithAggregatesFilter<"FarmerProfile"> | string
@@ -3476,6 +3538,7 @@ export namespace Prisma {
   }
 
   export type FarmerProfileCreateInput = {
+    userId: string
     name: string
     district: string
     zone: string
@@ -3490,6 +3553,7 @@ export namespace Prisma {
 
   export type FarmerProfileUncheckedCreateInput = {
     id?: number
+    userId: string
     name: string
     district: string
     zone: string
@@ -3503,6 +3567,7 @@ export namespace Prisma {
   }
 
   export type FarmerProfileUpdateInput = {
+    userId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     district?: StringFieldUpdateOperationsInput | string
     zone?: StringFieldUpdateOperationsInput | string
@@ -3517,6 +3582,7 @@ export namespace Prisma {
 
   export type FarmerProfileUncheckedUpdateInput = {
     id?: IntFieldUpdateOperationsInput | number
+    userId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     district?: StringFieldUpdateOperationsInput | string
     zone?: StringFieldUpdateOperationsInput | string
@@ -3531,6 +3597,7 @@ export namespace Prisma {
 
   export type FarmerProfileCreateManyInput = {
     id?: number
+    userId: string
     name: string
     district: string
     zone: string
@@ -3543,6 +3610,7 @@ export namespace Prisma {
   }
 
   export type FarmerProfileUpdateManyMutationInput = {
+    userId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     district?: StringFieldUpdateOperationsInput | string
     zone?: StringFieldUpdateOperationsInput | string
@@ -3556,6 +3624,7 @@ export namespace Prisma {
 
   export type FarmerProfileUncheckedUpdateManyInput = {
     id?: IntFieldUpdateOperationsInput | number
+    userId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     district?: StringFieldUpdateOperationsInput | string
     zone?: StringFieldUpdateOperationsInput | string
@@ -3621,8 +3690,8 @@ export namespace Prisma {
 
   export type IntFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel>
-    in?: number[]
-    notIn?: number[]
+    in?: number[] | ListIntFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
     lt?: number | IntFieldRefInput<$PrismaModel>
     lte?: number | IntFieldRefInput<$PrismaModel>
     gt?: number | IntFieldRefInput<$PrismaModel>
@@ -3632,8 +3701,8 @@ export namespace Prisma {
 
   export type StringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
-    in?: string[]
-    notIn?: string[]
+    in?: string[] | ListStringFieldRefInput<$PrismaModel>
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel>
     lt?: string | StringFieldRefInput<$PrismaModel>
     lte?: string | StringFieldRefInput<$PrismaModel>
     gt?: string | StringFieldRefInput<$PrismaModel>
@@ -3641,13 +3710,14 @@ export namespace Prisma {
     contains?: string | StringFieldRefInput<$PrismaModel>
     startsWith?: string | StringFieldRefInput<$PrismaModel>
     endsWith?: string | StringFieldRefInput<$PrismaModel>
+    mode?: QueryMode
     not?: NestedStringFilter<$PrismaModel> | string
   }
 
   export type FloatFilter<$PrismaModel = never> = {
     equals?: number | FloatFieldRefInput<$PrismaModel>
-    in?: number[]
-    notIn?: number[]
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel>
     lt?: number | FloatFieldRefInput<$PrismaModel>
     lte?: number | FloatFieldRefInput<$PrismaModel>
     gt?: number | FloatFieldRefInput<$PrismaModel>
@@ -3662,8 +3732,8 @@ export namespace Prisma {
 
   export type DateTimeFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    in?: Date[] | string[]
-    notIn?: Date[] | string[]
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
     lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
@@ -3683,6 +3753,7 @@ export namespace Prisma {
 
   export type FarmerProfileCountOrderByAggregateInput = {
     id?: SortOrder
+    userId?: SortOrder
     name?: SortOrder
     district?: SortOrder
     zone?: SortOrder
@@ -3701,6 +3772,7 @@ export namespace Prisma {
 
   export type FarmerProfileMaxOrderByAggregateInput = {
     id?: SortOrder
+    userId?: SortOrder
     name?: SortOrder
     district?: SortOrder
     zone?: SortOrder
@@ -3714,6 +3786,7 @@ export namespace Prisma {
 
   export type FarmerProfileMinOrderByAggregateInput = {
     id?: SortOrder
+    userId?: SortOrder
     name?: SortOrder
     district?: SortOrder
     zone?: SortOrder
@@ -3732,8 +3805,8 @@ export namespace Prisma {
 
   export type IntWithAggregatesFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel>
-    in?: number[]
-    notIn?: number[]
+    in?: number[] | ListIntFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
     lt?: number | IntFieldRefInput<$PrismaModel>
     lte?: number | IntFieldRefInput<$PrismaModel>
     gt?: number | IntFieldRefInput<$PrismaModel>
@@ -3748,8 +3821,8 @@ export namespace Prisma {
 
   export type StringWithAggregatesFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
-    in?: string[]
-    notIn?: string[]
+    in?: string[] | ListStringFieldRefInput<$PrismaModel>
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel>
     lt?: string | StringFieldRefInput<$PrismaModel>
     lte?: string | StringFieldRefInput<$PrismaModel>
     gt?: string | StringFieldRefInput<$PrismaModel>
@@ -3757,6 +3830,7 @@ export namespace Prisma {
     contains?: string | StringFieldRefInput<$PrismaModel>
     startsWith?: string | StringFieldRefInput<$PrismaModel>
     endsWith?: string | StringFieldRefInput<$PrismaModel>
+    mode?: QueryMode
     not?: NestedStringWithAggregatesFilter<$PrismaModel> | string
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedStringFilter<$PrismaModel>
@@ -3765,8 +3839,8 @@ export namespace Prisma {
 
   export type FloatWithAggregatesFilter<$PrismaModel = never> = {
     equals?: number | FloatFieldRefInput<$PrismaModel>
-    in?: number[]
-    notIn?: number[]
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel>
     lt?: number | FloatFieldRefInput<$PrismaModel>
     lte?: number | FloatFieldRefInput<$PrismaModel>
     gt?: number | FloatFieldRefInput<$PrismaModel>
@@ -3789,8 +3863,8 @@ export namespace Prisma {
 
   export type DateTimeWithAggregatesFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    in?: Date[] | string[]
-    notIn?: Date[] | string[]
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
     lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
@@ -3926,8 +4000,8 @@ export namespace Prisma {
 
   export type NestedIntFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel>
-    in?: number[]
-    notIn?: number[]
+    in?: number[] | ListIntFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
     lt?: number | IntFieldRefInput<$PrismaModel>
     lte?: number | IntFieldRefInput<$PrismaModel>
     gt?: number | IntFieldRefInput<$PrismaModel>
@@ -3937,8 +4011,8 @@ export namespace Prisma {
 
   export type NestedStringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
-    in?: string[]
-    notIn?: string[]
+    in?: string[] | ListStringFieldRefInput<$PrismaModel>
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel>
     lt?: string | StringFieldRefInput<$PrismaModel>
     lte?: string | StringFieldRefInput<$PrismaModel>
     gt?: string | StringFieldRefInput<$PrismaModel>
@@ -3951,8 +4025,8 @@ export namespace Prisma {
 
   export type NestedFloatFilter<$PrismaModel = never> = {
     equals?: number | FloatFieldRefInput<$PrismaModel>
-    in?: number[]
-    notIn?: number[]
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel>
     lt?: number | FloatFieldRefInput<$PrismaModel>
     lte?: number | FloatFieldRefInput<$PrismaModel>
     gt?: number | FloatFieldRefInput<$PrismaModel>
@@ -3967,8 +4041,8 @@ export namespace Prisma {
 
   export type NestedDateTimeFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    in?: Date[] | string[]
-    notIn?: Date[] | string[]
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
     lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
@@ -3978,8 +4052,8 @@ export namespace Prisma {
 
   export type NestedIntWithAggregatesFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel>
-    in?: number[]
-    notIn?: number[]
+    in?: number[] | ListIntFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
     lt?: number | IntFieldRefInput<$PrismaModel>
     lte?: number | IntFieldRefInput<$PrismaModel>
     gt?: number | IntFieldRefInput<$PrismaModel>
@@ -3994,8 +4068,8 @@ export namespace Prisma {
 
   export type NestedStringWithAggregatesFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
-    in?: string[]
-    notIn?: string[]
+    in?: string[] | ListStringFieldRefInput<$PrismaModel>
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel>
     lt?: string | StringFieldRefInput<$PrismaModel>
     lte?: string | StringFieldRefInput<$PrismaModel>
     gt?: string | StringFieldRefInput<$PrismaModel>
@@ -4011,8 +4085,8 @@ export namespace Prisma {
 
   export type NestedFloatWithAggregatesFilter<$PrismaModel = never> = {
     equals?: number | FloatFieldRefInput<$PrismaModel>
-    in?: number[]
-    notIn?: number[]
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel>
     lt?: number | FloatFieldRefInput<$PrismaModel>
     lte?: number | FloatFieldRefInput<$PrismaModel>
     gt?: number | FloatFieldRefInput<$PrismaModel>
@@ -4035,8 +4109,8 @@ export namespace Prisma {
 
   export type NestedDateTimeWithAggregatesFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    in?: Date[] | string[]
-    notIn?: Date[] | string[]
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
     lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
@@ -4067,6 +4141,7 @@ export namespace Prisma {
 
   export type FarmActivityLogCreateManyProfileInputEnvelope = {
     data: FarmActivityLogCreateManyProfileInput | FarmActivityLogCreateManyProfileInput[]
+    skipDuplicates?: boolean
   }
 
   export type FarmActivityLogUpsertWithWhereUniqueWithoutProfileInput = {
@@ -4097,6 +4172,7 @@ export namespace Prisma {
   }
 
   export type FarmerProfileCreateWithoutLogsInput = {
+    userId: string
     name: string
     district: string
     zone: string
@@ -4110,6 +4186,7 @@ export namespace Prisma {
 
   export type FarmerProfileUncheckedCreateWithoutLogsInput = {
     id?: number
+    userId: string
     name: string
     district: string
     zone: string
@@ -4138,6 +4215,7 @@ export namespace Prisma {
   }
 
   export type FarmerProfileUpdateWithoutLogsInput = {
+    userId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     district?: StringFieldUpdateOperationsInput | string
     zone?: StringFieldUpdateOperationsInput | string
@@ -4151,6 +4229,7 @@ export namespace Prisma {
 
   export type FarmerProfileUncheckedUpdateWithoutLogsInput = {
     id?: IntFieldUpdateOperationsInput | number
+    userId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     district?: StringFieldUpdateOperationsInput | string
     zone?: StringFieldUpdateOperationsInput | string

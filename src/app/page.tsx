@@ -23,6 +23,7 @@ import {
   TrendingUp,
   AlertTriangle,
   Sprout,
+  LogOut,
   Store,
   Award,
   ChevronRight,
@@ -322,18 +323,8 @@ export default function HomePage() {
       if (allProfiles.length > 0) {
         setActiveProfile(allProfiles[0] ?? null);
       } else {
-        // Create default profile for rich initial preview if database is empty
-        const defaultProfile = await createProfile({
-          name: "Siddaramaiah",
-          district: "Mandya",
-          zone: "Southern Dry Zone",
-          soilType: "Red Sandy Soil",
-          landSize: 5.0,
-          crops: ["Sugarcane", "Ragi"],
-          isIrrigated: true,
-        });
-        setProfiles([defaultProfile]);
-        setActiveProfile(defaultProfile);
+        setActiveProfile(null);
+        setActiveTab("profile");
       }
     }
     void loadData();
@@ -746,6 +737,16 @@ export default function HomePage() {
               className="text-[#404943] hover:bg-surface-container/50 transition-colors active:scale-95 duration-200 p-2 rounded-full border border-glass-stroke bg-white flex items-center justify-center shadow-sm"
             >
               <User size={18} className="fill-[#1B835E]/10 stroke-[#1B835E]" />
+            </button>
+
+            <button 
+              onClick={() => {
+                void import("~/server/actions").then((a) => a.logout());
+              }}
+              className="text-red-500 hover:bg-red-50 transition-colors active:scale-95 duration-200 px-3 py-1.5 rounded-full border border-red-100 bg-white flex items-center gap-1.5 shadow-sm font-bold text-xs"
+            >
+              <LogOut size={14} className="stroke-current" />
+              <span>Logout</span>
             </button>
           </div>
         </header>

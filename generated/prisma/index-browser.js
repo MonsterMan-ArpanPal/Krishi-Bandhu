@@ -115,11 +115,15 @@ Prisma.NullTypes = {
  */
 
 exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
+  ReadUncommitted: 'ReadUncommitted',
+  ReadCommitted: 'ReadCommitted',
+  RepeatableRead: 'RepeatableRead',
   Serializable: 'Serializable'
 });
 
 exports.Prisma.FarmerProfileScalarFieldEnum = {
   id: 'id',
+  userId: 'userId',
   name: 'name',
   district: 'district',
   zone: 'zone',
@@ -142,6 +146,11 @@ exports.Prisma.FarmActivityLogScalarFieldEnum = {
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
+};
+
+exports.Prisma.QueryMode = {
+  default: 'default',
+  insensitive: 'insensitive'
 };
 
 
