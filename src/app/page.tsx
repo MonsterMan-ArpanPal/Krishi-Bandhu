@@ -278,6 +278,7 @@ export default function HomePage() {
   const [ttsEnabled, setTtsEnabled] = useState<boolean>(true);
   const [isListening, setIsListening] = useState<boolean>(false);
   const [speechError, setSpeechError] = useState<string | null>(null);
+  const [speakingIdx, setSpeakingIdx] = useState<number | null>(null);
 
   const chatEndRef = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -499,8 +500,15 @@ export default function HomePage() {
   };
 
   // Speak specific text aloud
-  const handleSpeakMessage = (text: string) => {
+  const handleSpeakMessage = (text: string, idx?: number) => {
     if (typeof window !== "undefined" && "speechSynthesis" in window) {
+      // If we clicked the currently speaking bubble, cancel and stop.
+      if (idx !== undefined && speakingIdx === idx) {
+        window.speechSynthesis.cancel();
+        setSpeakingIdx(null);
+        return;
+      }
+
       // 1. Cancel any active speech synthesis and stop any active microphone listening to prevent resource locks
       window.speechSynthesis.cancel();
       /* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call */
@@ -513,6 +521,10 @@ export default function HomePage() {
       }
       /* eslint-enable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call */
       setIsListening(false);
+
+      if (idx !== undefined) {
+        setSpeakingIdx(idx);
+      }
 
       const voices = window.speechSynthesis.getVoices();
 
@@ -651,9 +663,11 @@ export default function HomePage() {
       utterance.onerror = (e) => {
         // Use console.warn instead of console.error to avoid triggering Next.js dev error overlays on normal interruptions/cancellations
         console.warn("SpeechSynthesisUtterance error event:", e);
+        setSpeakingIdx(null);
       };
       utterance.onend = () => {
         console.log("SpeechSynthesisUtterance ended successfully.");
+        setSpeakingIdx(null);
       };
       
       window.speechSynthesis.speak(utterance);
@@ -717,11 +731,13 @@ export default function HomePage() {
     try {
       const weatherText = getWeatherText(weatherSim, lang);
       const answer = await askAI(activeProfile.id, weatherText, input, messages, lang);
-      setMessages((prev) => [...prev, { role: "model", text: answer }]);
-
-      if (ttsEnabled) {
-        handleSpeakMessage(answer);
-      }
+      setMessages((prev) => {
+        const updated = [...prev, { role: "model" as const, text: answer }];
+        if (ttsEnabled) {
+          setTimeout(() => handleSpeakMessage(answer, updated.length - 1), 50);
+        }
+        return updated;
+      });
     } catch (err) {
       console.error("Chat error:", err);
       // Append a clear error fallback bubble so that the UI does not freeze or stay silent
@@ -1269,7 +1285,14 @@ export default function HomePage() {
 
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => setTtsEnabled(!ttsEnabled)}
+                    onClick={() => {
+                      const newVal = !ttsEnabled;
+                      setTtsEnabled(newVal);
+                      if (!newVal && typeof window !== "undefined" && "speechSynthesis" in window) {
+                        window.speechSynthesis.cancel();
+                        setSpeakingIdx(null);
+                      }
+                    }}
                     className={`flex h-9 px-3 items-center justify-center gap-1.5 rounded-xl border transition-all text-xs font-bold active:scale-95 ${
                       ttsEnabled
                         ? "border-emerald-500/30 bg-emerald-50 text-[#1B835E]"
@@ -1337,10 +1360,14 @@ export default function HomePage() {
 
                           {msg.role === "model" && (
                             <button
-                              onClick={() => handleSpeakMessage(getDisplayMessageText(msg, idx))}
-                              className="p-1 rounded-lg bg-white border border-glass-stroke text-slate-400 hover:text-[#1B835E] hover:border-[#1B835E]/30 transition-colors shrink-0 self-start mt-0.5 ml-1 active:scale-90 shadow-sm"
+                              onClick={() => handleSpeakMessage(getDisplayMessageText(msg, idx), idx)}
+                              className={`p-1 rounded-lg bg-white border border-glass-stroke transition-colors shrink-0 self-start mt-0.5 ml-1 active:scale-90 shadow-sm ${
+                                speakingIdx === idx
+                                  ? "text-red-500 border-red-200/50 animate-pulse bg-red-50/10"
+                                  : "text-slate-400 hover:text-[#1B835E] hover:border-[#1B835E]/30"
+                              }`}
                             >
-                              <Volume2 size={13} />
+                              {speakingIdx === idx ? <VolumeX size={13} className="stroke-[2.5]" /> : <Volume2 size={13} />}
                             </button>
                           )}
                         </div>
