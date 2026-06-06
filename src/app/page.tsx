@@ -440,6 +440,60 @@ export default function HomePage() {
     setLogs((prev) => prev.filter((l) => l.id !== id));
   };
 
+  const transliterateKannadaToEnglish = (text: string): string => {
+    const vowels: Record<string, string> = {
+      'ಅ': 'a', 'ಆ': 'aa', 'ಇ': 'i', 'ಈ': 'ee', 'ಉ': 'u', 'ಊ': 'oo', 'ಋ': 'ru',
+      'ಎ': 'e', 'ಏ': 'ee', 'ಐ': 'ai', 'ಒ': 'o', 'ಓ': 'oo', 'ಔ': 'au'
+    };
+    const consonants: Record<string, string> = {
+      'ಕ': 'ka', 'ಖ': 'kha', 'ಗ': 'ga', 'ಘ': 'gha', 'ಙ': 'nga',
+      'ಚ': 'cha', 'ಛ': 'chha', 'ಜ': 'ja', 'ಝ': 'jha', 'ಞ': 'nya',
+      'ಟ': 'ta', 'ಠ': 'tha', 'ಡ': 'da', 'ಢ': 'dha', 'ಣ': 'na',
+      'ತ': 'ta', 'ಥ': 'tha', 'ದ': 'da', 'ಧ': 'dha', 'ನ': 'na',
+      'ಪ': 'pa', 'ಫ': 'pha', 'ಬ': 'ba', 'ಭ': 'bha', 'ಮ': 'ma',
+      'ಯ': 'ya', 'ರ': 'ra', 'ಲ': 'la', 'ವ': 'va', 'ಶ': 'sha', 'ಷ': 'sha',
+      'ಸ': 'sa', 'ಹ': 'ha', 'ಳ': 'la'
+    };
+    const modifiers: Record<string, string> = {
+      'ಾ': 'a', 'ಿ': 'i', 'ೀ': 'ee', 'ು': 'u', 'ೂ': 'oo', 'ೃ': 'ru',
+      'ೆ': 'e', 'ೇ': 'ee', 'ೈ': 'ai', 'ೊ': 'o', 'ೋ': 'oo', 'ೌ': 'au',
+      '್': ''
+    };
+    const anusvara = 'ಂ';
+
+    let result = '';
+    let i = 0;
+    while (i < text.length) {
+      const char = text[i];
+      const vowelVal = char ? vowels[char] : undefined;
+      const consonantVal = char ? consonants[char] : undefined;
+
+      if (char && vowelVal !== undefined) {
+        result += vowelVal;
+        i++;
+      } else if (char && consonantVal !== undefined) {
+        const base = consonantVal;
+        const nextChar = text[i + 1];
+        const modifierVal = nextChar ? modifiers[nextChar] : undefined;
+
+        if (nextChar && modifierVal !== undefined) {
+          result += base.slice(0, -1) + modifierVal;
+          i += 2;
+        } else if (nextChar === anusvara) {
+          result += base + 'm';
+          i += 2;
+        } else {
+          result += base;
+          i++;
+        }
+      } else {
+        result += char;
+        i++;
+      }
+    }
+    return result;
+  };
+
   // Speak specific text aloud
   const handleSpeakMessage = (text: string) => {
     if (typeof window !== "undefined" && "speechSynthesis" in window) {
@@ -456,12 +510,15 @@ export default function HomePage() {
       /* eslint-enable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call */
       setIsListening(false);
 
-      const utterance = new SpeechSynthesisUtterance(text);
       const voices = window.speechSynthesis.getVoices();
 
       // Check the text script content dynamically for high accuracy
       const containsKannada = /[\u0C80-\u0CFF]/.test(text);
       const containsDevanagari = /[\u0900-\u097F]/.test(text);
+
+      let textToSpeak = text;
+      let selectedVoice = null;
+      let selectedLang = "en-IN";
 
       if (containsKannada) {
         // Prioritize case-insensitive matching for natural sounding Kannada voices
@@ -476,18 +533,46 @@ export default function HomePage() {
             nameLower.includes("kannada")
           );
         });
+
         if (knVoice) {
-          utterance.voice = knVoice;
+          selectedVoice = knVoice;
+          selectedLang = "kn-IN";
         } else {
           // If no specific Kannada voice found, find any voice supporting Kannada locale
           const fallbackKn = voices.find(v => v.lang.toLowerCase().startsWith("kn"));
           if (fallbackKn) {
-            utterance.voice = fallbackKn;
+            selectedVoice = fallbackKn;
+            selectedLang = "kn-IN";
           } else {
-            console.warn("No Kannada voice pack found on this browser. Falling back to default voice.");
+            // CRITICAL FALLBACK: If the browser has absolutely NO Kannada voice pack installed,
+            // we transliterate the Kannada text to English phonetically so that the English voice
+            // can read it naturally instead of speaking character codepoint numbers.
+            console.warn("No Kannada voice pack found on this browser. Transliterating text to English phonetically for TTS...");
+            textToSpeak = transliterateKannadaToEnglish(text);
+            
+            // Look for Indian English voice so the pronunciation accent sounds native
+            const enVoice = voices.find(v => {
+              const nameLower = v.name.toLowerCase();
+              const langLower = v.lang.toLowerCase();
+              return (
+                nameLower.includes("neerja") || 
+                nameLower.includes("prabhat") || 
+                nameLower.includes("rishi") || 
+                nameLower.includes("isha") || 
+                nameLower.includes("veena") || 
+                nameLower.includes("google english (india)") ||
+                (langLower.startsWith("en") && (nameLower.includes("india") || langLower.includes("in") || langLower.endsWith("in")))
+              );
+            });
+            if (enVoice) {
+              selectedVoice = enVoice;
+            } else {
+              const fallbackEn = voices.find(v => v.lang.toLowerCase().startsWith("en"));
+              if (fallbackEn) selectedVoice = fallbackEn;
+            }
+            selectedLang = "en-IN";
           }
         }
-        utterance.lang = "kn-IN";
       } else if (containsDevanagari) {
         // If text contains Hindi characters, select a Hindi voice case-insensitively
         const hiVoice = voices.find(v => {
@@ -504,16 +589,20 @@ export default function HomePage() {
           );
         });
         if (hiVoice) {
-          utterance.voice = hiVoice;
+          selectedVoice = hiVoice;
+          selectedLang = "hi-IN";
         } else {
           const fallbackHi = voices.find(v => v.lang.toLowerCase().startsWith("hi"));
           if (fallbackHi) {
-            utterance.voice = fallbackHi;
+            selectedVoice = fallbackHi;
+            selectedLang = "hi-IN";
           } else {
-            console.warn("No Hindi voice pack found on this browser. Falling back to default voice.");
+            console.warn("No Hindi voice pack found on this browser. Falling back to default English voice.");
+            const fallbackEn = voices.find(v => v.lang.toLowerCase().startsWith("en"));
+            if (fallbackEn) selectedVoice = fallbackEn;
+            selectedLang = "en-IN";
           }
         }
-        utterance.lang = "hi-IN";
       } else {
         // Prioritize case-insensitive matching for natural Indian English voices
         const enVoice = voices.find(v => {
@@ -530,25 +619,29 @@ export default function HomePage() {
           );
         });
         if (enVoice) {
-          utterance.voice = enVoice;
+          selectedVoice = enVoice;
         } else {
           // If no Indian English voice is found, try to find ANY English voice to avoid default system voice collisions
           const fallbackEn = voices.find(v => v.lang.toLowerCase().startsWith("en"));
           if (fallbackEn) {
-            utterance.voice = fallbackEn;
+            selectedVoice = fallbackEn;
             console.warn("No Indian English voice found. Falling back to default English voice:", fallbackEn.name);
-          } else {
-            console.warn("No English voice pack found on this browser. Falling back to default system voice.");
           }
         }
-        utterance.lang = "en-IN";
+        selectedLang = "en-IN";
       }
+
+      const utterance = new SpeechSynthesisUtterance(textToSpeak);
+      if (selectedVoice) {
+        utterance.voice = selectedVoice;
+      }
+      utterance.lang = selectedLang;
 
       // Slightly relaxed speed for clearer comprehension
       utterance.rate = 0.95;
 
       // Debug log selected voice
-      console.log("Selected TTS Voice:", utterance.voice ? utterance.voice.name : "Default Voice", "Locale:", utterance.lang);
+      console.log("Selected TTS Voice:", utterance.voice ? utterance.voice.name : "Default Voice", "Locale:", utterance.lang, "Text spoken:", textToSpeak);
 
       // Event handlers to prevent voice synthesis engine freezes
       utterance.onerror = (e) => {
