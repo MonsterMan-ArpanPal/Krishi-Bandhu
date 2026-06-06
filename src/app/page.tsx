@@ -396,9 +396,11 @@ export default function HomePage() {
       isIrrigated: profileForm.isIrrigated,
     });
 
-    setProfiles((prev) => [newProfile, ...prev]);
-    setActiveProfile(newProfile);
-    setActiveTab("dashboard");
+    if (newProfile) {
+      setProfiles((prev) => [newProfile, ...prev]);
+      setActiveProfile(newProfile);
+      setActiveTab("dashboard");
+    }
     // Reset Form
     setProfileForm({
       name: "",
@@ -430,8 +432,10 @@ export default function HomePage() {
     if (!activeProfile || !logNotes) return;
 
     const newLog = await addLogEntry(activeProfile.id, logCategory, logNotes);
-    setLogs((prev) => [newLog, ...prev]);
-    setLogNotes("");
+    if (newLog) {
+      setLogs((prev) => [newLog, ...prev]);
+      setLogNotes("");
+    }
   };
 
   // Delete Log entry

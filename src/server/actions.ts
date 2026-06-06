@@ -18,105 +18,139 @@ export interface ProfileInput {
 }
 
 export async function logout() {
-  const supabase = await createClient();
-  await supabase.auth.signOut();
+  try {
+    const supabase = await createClient();
+    await supabase.auth.signOut();
+  } catch (err) {
+    console.error("logout action error:", err);
+  }
   revalidatePath("/", "layout");
   redirect("/login");
 }
 
 export async function getProfiles() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error("Unauthorized");
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return [];
 
-  return await db.farmerProfile.findMany({
-    where: { userId: user.id },
-    orderBy: { createdAt: "desc" },
-  });
+    return await db.farmerProfile.findMany({
+      where: { userId: user.id },
+      orderBy: { createdAt: "desc" },
+    });
+  } catch (err) {
+    console.error("getProfiles error:", err);
+    return [];
+  }
 }
 
 export async function createProfile(data: ProfileInput) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error("Unauthorized");
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
 
-  const newProfile = await db.farmerProfile.create({
-    data: {
-      userId: user.id,
-      name: data.name,
-      district: data.district,
-      zone: data.zone,
-      soilType: data.soilType,
-      landSize: data.landSize,
-      crops: data.crops.join(","),
-      isIrrigated: data.isIrrigated,
-    },
-  });
-  revalidatePath("/", "layout");
-  return newProfile;
+    const newProfile = await db.farmerProfile.create({
+      data: {
+        userId: user.id,
+        name: data.name,
+        district: data.district,
+        zone: data.zone,
+        soilType: data.soilType,
+        landSize: data.landSize,
+        crops: data.crops.join(","),
+        isIrrigated: data.isIrrigated,
+      },
+    });
+    revalidatePath("/", "layout");
+    return newProfile;
+  } catch (err) {
+    console.error("createProfile error:", err);
+    return null;
+  }
 }
 
 export async function deleteProfile(id: number) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error("Unauthorized");
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
 
-  const profile = await db.farmerProfile.findUnique({ where: { id } });
-  if (profile?.userId !== user.id) throw new Error("Unauthorized");
+    const profile = await db.farmerProfile.findUnique({ where: { id } });
+    if (profile?.userId !== user.id) return null;
 
-  const deleted = await db.farmerProfile.delete({
-    where: { id },
-  });
-  revalidatePath("/", "layout");
-  return deleted;
+    const deleted = await db.farmerProfile.delete({
+      where: { id },
+    });
+    revalidatePath("/", "layout");
+    return deleted;
+  } catch (err) {
+    console.error("deleteProfile error:", err);
+    return null;
+  }
 }
 
 export async function getLogs(profileId: number) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error("Unauthorized");
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return [];
 
-  const profile = await db.farmerProfile.findUnique({ where: { id: profileId } });
-  if (profile?.userId !== user.id) throw new Error("Unauthorized");
+    const profile = await db.farmerProfile.findUnique({ where: { id: profileId } });
+    if (profile?.userId !== user.id) return [];
 
-  return await db.farmActivityLog.findMany({
-    where: { profileId },
-    orderBy: { timestamp: "desc" },
-  });
+    return await db.farmActivityLog.findMany({
+      where: { profileId },
+      orderBy: { timestamp: "desc" },
+    });
+  } catch (err) {
+    console.error("getLogs error:", err);
+    return [];
+  }
 }
 
 export async function addLogEntry(profileId: number, category: string, notes: string) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error("Unauthorized");
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
 
-  const profile = await db.farmerProfile.findUnique({ where: { id: profileId } });
-  if (profile?.userId !== user.id) throw new Error("Unauthorized");
+    const profile = await db.farmerProfile.findUnique({ where: { id: profileId } });
+    if (profile?.userId !== user.id) return null;
 
-  const newLog = await db.farmActivityLog.create({
-    data: {
-      profileId,
-      category,
-      notes,
-    },
-  });
-  revalidatePath("/", "layout");
-  return newLog;
+    const newLog = await db.farmActivityLog.create({
+      data: {
+        profileId,
+        category,
+        notes,
+      },
+    });
+    revalidatePath("/", "layout");
+    return newLog;
+  } catch (err) {
+    console.error("addLogEntry error:", err);
+    return null;
+  }
 }
 
 export async function deleteLogEntry(id: number) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error("Unauthorized");
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
 
-  const log = await db.farmActivityLog.findUnique({ where: { id }, include: { profile: true } });
-  if (log?.profile.userId !== user.id) throw new Error("Unauthorized");
+    const log = await db.farmActivityLog.findUnique({ where: { id }, include: { profile: true } });
+    if (log?.profile.userId !== user.id) return null;
 
-  const deleted = await db.farmActivityLog.delete({
-    where: { id },
-  });
-  revalidatePath("/", "layout");
-  return deleted;
+    const deleted = await db.farmActivityLog.delete({
+      where: { id },
+    });
+    revalidatePath("/", "layout");
+    return deleted;
+  } catch (err) {
+    console.error("deleteLogEntry error:", err);
+    return null;
+  }
 }
 
 export async function askAI(
@@ -126,59 +160,79 @@ export async function askAI(
   history: Array<{ role: "user" | "model"; text: string }>,
   language: "en" | "kn" = "en"
 ) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error("Unauthorized");
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return language === "kn"
+        ? "ದೋಷ: ದಯವಿಟ್ಟು ಲಾಗ್ ಇನ್ ಮಾಡಿ ಮತ್ತೊಮ್ಮೆ ಪ್ರಯತ್ನಿಸಿ."
+        : "Error: You are not authorized. Please log in again.";
+    }
 
-  const profile = await db.farmerProfile.findUnique({
-    where: { id: profileId },
-  });
+    const profile = await db.farmerProfile.findUnique({
+      where: { id: profileId },
+    });
 
-  if (!profile) {
-    throw new Error("Farmer profile not found or unauthorized");
+    if (profile?.userId !== user.id) {
+      return language === "kn"
+        ? "ದೋಷ: ರೈತರ ವಿವರಗಳು ಕಂಡುಬಂದಿಲ್ಲ."
+        : "Error: Profile not found or unauthorized.";
+    }
+
+    const context = {
+      name: profile.name,
+      district: profile.district,
+      zone: profile.zone,
+      soilType: profile.soilType,
+      landSize: profile.landSize,
+      crops: profile.crops.split(","),
+      isIrrigated: profile.isIrrigated,
+    };
+
+    return await askKrishiSakhi(context, weatherSim, message, history, language);
+  } catch (err) {
+    console.error("askAI error:", err);
+    return language === "kn"
+      ? "ಕ್ಷಮಿಸಿ, ಕೃಷಿ ಸಖಿ ಸರ್ವರ್ ದೋಷ ಸಂಭವಿಸಿದೆ."
+      : "Error: A server exception occurred while contacting Krishi Sakhi.";
   }
-  if (profile.userId !== user.id) {
-    throw new Error("Farmer profile not found or unauthorized");
-  }
-
-  const context = {
-    name: profile.name,
-    district: profile.district,
-    zone: profile.zone,
-    soilType: profile.soilType,
-    landSize: profile.landSize,
-    crops: profile.crops.split(","),
-    isIrrigated: profile.isIrrigated,
-  };
-
-  return await askKrishiSakhi(context, weatherSim, message, history, language);
 }
 
 export async function getAIAdvisory(profileId: number, weatherSim: string, language: "en" | "kn") {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error("Unauthorized");
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return language === "kn"
+        ? "ದೋಷ: ರೈತರು ಲಾಗ್ ಇನ್ ಆಗಿಲ್ಲ."
+        : "Error: Unauthorized. Please log in.";
+    }
 
-  const profile = await db.farmerProfile.findUnique({
-    where: { id: profileId },
-  });
+    const profile = await db.farmerProfile.findUnique({
+      where: { id: profileId },
+    });
 
-  if (!profile) {
-    throw new Error("Farmer profile not found or unauthorized");
+    if (profile?.userId !== user.id) {
+      return language === "kn"
+        ? "ದೋಷ: ವಿವರಗಳು ಸಿಕ್ಕಿಲ್ಲ."
+        : "Error: Profile not found.";
+    }
+
+    const context = {
+      name: profile.name,
+      district: profile.district,
+      zone: profile.zone,
+      soilType: profile.soilType,
+      landSize: profile.landSize,
+      crops: profile.crops.split(","),
+      isIrrigated: profile.isIrrigated,
+    };
+
+    return await getProactiveAdvisory(context, weatherSim, language);
+  } catch (err) {
+    console.error("getAIAdvisory error:", err);
+    return language === "kn"
+      ? "ದೋಷ: ಸಲಹೆ ತಯಾರಿಸಲು ಸಾಧ್ಯವಾಗಿಲ್ಲ."
+      : "Error: Unable to generate daily advisory card.";
   }
-  if (profile.userId !== user.id) {
-    throw new Error("Farmer profile not found or unauthorized");
-  }
-
-  const context = {
-    name: profile.name,
-    district: profile.district,
-    zone: profile.zone,
-    soilType: profile.soilType,
-    landSize: profile.landSize,
-    crops: profile.crops.split(","),
-    isIrrigated: profile.isIrrigated,
-  };
-
-  return await getProactiveAdvisory(context, weatherSim, language);
 }
