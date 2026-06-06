@@ -85,9 +85,9 @@ export async function askKrishiSakhi(
   language: "en" | "kn" = "en"
 ): Promise<string> {
   const modelsToTry = [
+    { name: "gemini-2.5-flash", apiVersion: "v1beta" as const },
     { name: "gemini-2.0-flash", apiVersion: "v1beta" as const },
-    { name: "gemini-flash-latest", apiVersion: "v1beta" as const },
-    { name: "gemini-2.5-flash", apiVersion: "v1beta" as const }
+    { name: "gemini-flash-latest", apiVersion: "v1beta" as const }
   ];
   let lastError: Error | null = null;
 
@@ -156,9 +156,9 @@ export async function getProactiveAdvisory(
   language: "en" | "kn"
 ): Promise<string> {
   const modelsToTry = [
+    { name: "gemini-2.5-flash", apiVersion: "v1beta" as const },
     { name: "gemini-2.0-flash", apiVersion: "v1beta" as const },
-    { name: "gemini-flash-latest", apiVersion: "v1beta" as const },
-    { name: "gemini-2.5-flash", apiVersion: "v1beta" as const }
+    { name: "gemini-flash-latest", apiVersion: "v1beta" as const }
   ];
   let lastError: Error | null = null;
 
