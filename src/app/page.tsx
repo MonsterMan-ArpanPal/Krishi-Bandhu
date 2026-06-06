@@ -459,10 +459,11 @@ export default function HomePage() {
       const utterance = new SpeechSynthesisUtterance(text);
       const voices = window.speechSynthesis.getVoices();
 
-      // Check if text is written in Devanagari script (Hindi/Sanskrit/etc.)
+      // Check the text script content dynamically for high accuracy
+      const containsKannada = /[\u0C80-\u0CFF]/.test(text);
       const containsDevanagari = /[\u0900-\u097F]/.test(text);
 
-      if (lang === "kn") {
+      if (containsKannada) {
         // Prioritize case-insensitive matching for natural sounding Kannada voices
         const knVoice = voices.find(v => {
           const nameLower = v.name.toLowerCase();
@@ -477,6 +478,14 @@ export default function HomePage() {
         });
         if (knVoice) {
           utterance.voice = knVoice;
+        } else {
+          // If no specific Kannada voice found, find any voice supporting Kannada locale
+          const fallbackKn = voices.find(v => v.lang.toLowerCase().startsWith("kn"));
+          if (fallbackKn) {
+            utterance.voice = fallbackKn;
+          } else {
+            console.warn("No Kannada voice pack found on this browser. Falling back to default voice.");
+          }
         }
         utterance.lang = "kn-IN";
       } else if (containsDevanagari) {
@@ -496,6 +505,13 @@ export default function HomePage() {
         });
         if (hiVoice) {
           utterance.voice = hiVoice;
+        } else {
+          const fallbackHi = voices.find(v => v.lang.toLowerCase().startsWith("hi"));
+          if (fallbackHi) {
+            utterance.voice = fallbackHi;
+          } else {
+            console.warn("No Hindi voice pack found on this browser. Falling back to default voice.");
+          }
         }
         utterance.lang = "hi-IN";
       } else {
@@ -510,11 +526,20 @@ export default function HomePage() {
             nameLower.includes("isha") || 
             nameLower.includes("veena") || 
             nameLower.includes("google english (india)") ||
-            (langLower.startsWith("en") && (nameLower.includes("india") || langLower.includes("in")))
+            (langLower.startsWith("en") && (nameLower.includes("india") || langLower.includes("in") || langLower.endsWith("in")))
           );
         });
         if (enVoice) {
           utterance.voice = enVoice;
+        } else {
+          // If no Indian English voice is found, try to find ANY English voice to avoid default system voice collisions
+          const fallbackEn = voices.find(v => v.lang.toLowerCase().startsWith("en"));
+          if (fallbackEn) {
+            utterance.voice = fallbackEn;
+            console.warn("No Indian English voice found. Falling back to default English voice:", fallbackEn.name);
+          } else {
+            console.warn("No English voice pack found on this browser. Falling back to default system voice.");
+          }
         }
         utterance.lang = "en-IN";
       }
