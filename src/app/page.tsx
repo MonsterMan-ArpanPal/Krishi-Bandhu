@@ -527,7 +527,8 @@ export default function HomePage() {
 
       // Event handlers to prevent voice synthesis engine freezes
       utterance.onerror = (e) => {
-        console.error("SpeechSynthesisUtterance error event:", e);
+        // Use console.warn instead of console.error to avoid triggering Next.js dev error overlays on normal interruptions/cancellations
+        console.warn("SpeechSynthesisUtterance error event:", e);
       };
       utterance.onend = () => {
         console.log("SpeechSynthesisUtterance ended successfully.");
