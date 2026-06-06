@@ -487,6 +487,29 @@ export default function HomePage() {
     return msg.text;
   };
 
+  const renderFormattedText = (text: string) => {
+    if (!text) return null;
+    const parts = text.split(/(\*\*[\s\S]*?\*\*)/g);
+    
+    const renderItalics = (str: string) => {
+      const subParts = str.split(/(\*[\s\S]*?\*)/g);
+      return subParts.map((subPart, subIdx) => {
+        if (subPart.startsWith("*") && subPart.endsWith("*") && subPart.length > 2) {
+          return <em key={subIdx}>{subPart.slice(1, -1)}</em>;
+        }
+        return subPart;
+      });
+    };
+
+    return parts.map((part, idx) => {
+      if (part.startsWith("**") && part.endsWith("**") && part.length > 4) {
+        const boldText = part.slice(2, -2);
+        return <strong key={idx}>{renderItalics(boldText)}</strong>;
+      }
+      return <span key={idx}>{renderItalics(part)}</span>;
+    });
+  };
+
   // Send Conversational Chat
   const handleSendChat = async (textToSend?: string) => {
     const input = textToSend ?? chatInput;
@@ -890,8 +913,8 @@ export default function HomePage() {
                         </div>
                       ) : (
                         <div className="space-y-2">
-                          <p className="text-sm font-semibold text-[#404943] leading-relaxed">
-                            {dailyAdvisory}
+                          <p className="text-sm font-semibold text-[#404943] leading-relaxed whitespace-pre-line">
+                            {renderFormattedText(dailyAdvisory)}
                           </p>
                           {lang === "kn" ? (
                             <p className="text-xs text-slate-400 leading-normal font-medium italic">
@@ -1110,7 +1133,7 @@ export default function HomePage() {
                                 : "glass-panel bg-white text-[#191c1b] rounded-tl-none border border-slate-200/50"
                             }`}
                           >
-                            <p className="whitespace-pre-line">{getDisplayMessageText(msg, idx)}</p>
+                            <p className="whitespace-pre-line">{renderFormattedText(getDisplayMessageText(msg, idx))}</p>
                           </div>
 
                           {msg.role === "model" && (
@@ -1212,7 +1235,6 @@ export default function HomePage() {
             </div>
           )}
 
-          {/* ================================================================= */}
           {/* VIEW: ACTIVITY TIMELINE                                          */}
           {/* ================================================================= */}
           {activeTab === "activity" && (
@@ -1443,6 +1465,7 @@ export default function HomePage() {
               </div>
             </div>
           )}
+
 
           {/* ================================================================= */}
           {/* VIEW: FARMER PROFILE                                             */}

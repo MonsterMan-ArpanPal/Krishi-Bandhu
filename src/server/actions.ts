@@ -134,7 +134,10 @@ export async function askAI(
     where: { id: profileId },
   });
 
-  if (profile?.userId !== user.id) {
+  if (!profile) {
+    throw new Error("Farmer profile not found or unauthorized");
+  }
+  if (profile.userId !== user.id) {
     throw new Error("Farmer profile not found or unauthorized");
   }
 
@@ -160,7 +163,10 @@ export async function getAIAdvisory(profileId: number, weatherSim: string, langu
     where: { id: profileId },
   });
 
-  if (profile?.userId !== user.id) {
+  if (!profile) {
+    throw new Error("Farmer profile not found or unauthorized");
+  }
+  if (profile.userId !== user.id) {
     throw new Error("Farmer profile not found or unauthorized");
   }
 
