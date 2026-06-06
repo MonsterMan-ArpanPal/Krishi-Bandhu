@@ -123,7 +123,8 @@ export async function askAI(
   profileId: number,
   weatherSim: string,
   message: string,
-  history: Array<{ role: "user" | "model"; text: string }>
+  history: Array<{ role: "user" | "model"; text: string }>,
+  language: "en" | "kn" = "en"
 ) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -133,7 +134,10 @@ export async function askAI(
     where: { id: profileId },
   });
 
-  if (profile?.userId !== user.id) {
+  if (!profile) {
+    throw new Error("Farmer profile not found or unauthorized");
+  }
+  if (profile.userId !== user.id) {
     throw new Error("Farmer profile not found or unauthorized");
   }
 
@@ -147,7 +151,7 @@ export async function askAI(
     isIrrigated: profile.isIrrigated,
   };
 
-  return await askKrishiSakhi(context, weatherSim, message, history);
+  return await askKrishiSakhi(context, weatherSim, message, history, language);
 }
 
 export async function getAIAdvisory(profileId: number, weatherSim: string, language: "en" | "kn") {
@@ -159,7 +163,10 @@ export async function getAIAdvisory(profileId: number, weatherSim: string, langu
     where: { id: profileId },
   });
 
-  if (profile?.userId !== user.id) {
+  if (!profile) {
+    throw new Error("Farmer profile not found or unauthorized");
+  }
+  if (profile.userId !== user.id) {
     throw new Error("Farmer profile not found or unauthorized");
   }
 

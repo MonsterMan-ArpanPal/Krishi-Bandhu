@@ -141,7 +141,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "D:\\hidProject\\Krishi-Bandhu\\generated\\prisma",
+      "value": "C:\\Users\\ss\\.gemini\\antigravity\\scratch\\Krishi-Bandhu\\generated\\prisma",
       "fromEnvVar": null
     },
     "config": {
@@ -155,7 +155,7 @@ const config = {
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "D:\\hidProject\\Krishi-Bandhu\\prisma\\schema.prisma",
+    "sourceFilePath": "C:\\Users\\ss\\.gemini\\antigravity\\scratch\\Krishi-Bandhu\\prisma\\schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
@@ -169,6 +169,7 @@ const config = {
     "db"
   ],
   "activeProvider": "postgresql",
+  "postinstall": false,
   "inlineDatasources": {
     "db": {
       "url": {

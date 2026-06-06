@@ -43,7 +43,7 @@ async function callWithRetry<T>(fn: () => Promise<T>, retries = 3, delay = 1000)
 /**
  * Construct system instructions for the farming assistant (Krishi Sakhi)
  */
-function buildSystemInstructions(profile: FarmerProfileContext, weatherSim: string): string {
+function buildSystemInstructions(profile: FarmerProfileContext, weatherSim: string, language: "en" | "kn"): string {
   return `You are "Krishi Sakhi" (Farmer's Friend), a compassionate, highly knowledgeable, and expert agricultural AI assistant created to support smallholder farmers in Karnataka, India. 
 Your goal is to guide the farmer through their crop cycles, offer diagnostic tips for pests, recommend best practices, and suggest government schemes.
 
@@ -60,9 +60,9 @@ CRITICAL INSTRUCTIONS:
    - Context: ${weatherSim}
 
 3. LANGUAGE POLICY:
-   - Respond strictly in the language used by the farmer. 
-   - If the user writes or speaks in Kannada (ಕನ್ನಡ), respond in warm, polite, and grammatically correct Kannada using the Kannada script. Use simple farming terms (e.g., "ಬಿತ್ತನೆ" for sowing, "ನೀರಾವರಿ" for irrigation, "ಗೊಬ್ಬರ" for fertilizer).
-   - If the user writes or speaks in English, respond in clear, easy-to-understand English.
+   - You MUST respond strictly in ${language === "kn" ? "Kannada (ಕನ್ನಡ)" : "English"}.
+   - If Kannada (ಕನ್ನಡ), respond in warm, polite, and grammatically correct Kannada using the Kannada script. Use simple farming terms (e.g., "ಬಿತ್ತನೆ" for sowing, "ನೀರಾವರಿ" for irrigation, "ಗೊಬ್ಬರ" for fertilizer).
+   - If English, respond in clear, easy-to-understand English.
    - Keep answers structured with short paragraphs or bullet points for readability.
 
 4. ADVISORY STYLE:
@@ -81,11 +81,13 @@ export async function askKrishiSakhi(
   profile: FarmerProfileContext,
   weatherSim: string,
   message: string,
-  history: ChatMessage[] = []
+  history: ChatMessage[] = [],
+  language: "en" | "kn" = "en"
 ): Promise<string> {
   const modelsToTry = [
-    { name: "gemini-2.5-flash", apiVersion: "v1" as const },
-    { name: "gemini-2.5-flash-lite", apiVersion: "v1beta" as const }
+    { name: "gemini-2.0-flash", apiVersion: "v1beta" as const },
+    { name: "gemini-flash-latest", apiVersion: "v1beta" as const },
+    { name: "gemini-2.5-flash", apiVersion: "v1beta" as const }
   ];
   let lastError: Error | null = null;
 
@@ -94,7 +96,7 @@ export async function askKrishiSakhi(
       const model = genAI.getGenerativeModel(
         {
           model: modelCfg.name,
-          systemInstruction: buildSystemInstructions(profile, weatherSim),
+          systemInstruction: buildSystemInstructions(profile, weatherSim, language),
         },
         { apiVersion: modelCfg.apiVersion }
       );
@@ -146,8 +148,9 @@ export async function getProactiveAdvisory(
   language: "en" | "kn"
 ): Promise<string> {
   const modelsToTry = [
-    { name: "gemini-2.5-flash", apiVersion: "v1" as const },
-    { name: "gemini-2.5-flash-lite", apiVersion: "v1beta" as const }
+    { name: "gemini-2.0-flash", apiVersion: "v1beta" as const },
+    { name: "gemini-flash-latest", apiVersion: "v1beta" as const },
+    { name: "gemini-2.5-flash", apiVersion: "v1beta" as const }
   ];
   let lastError: Error | null = null;
 
@@ -156,7 +159,7 @@ export async function getProactiveAdvisory(
       const model = genAI.getGenerativeModel(
         {
           model: modelCfg.name,
-          systemInstruction: buildSystemInstructions(profile, weatherSim),
+          systemInstruction: buildSystemInstructions(profile, weatherSim, language),
         },
         { apiVersion: modelCfg.apiVersion }
       );
