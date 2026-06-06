@@ -101,11 +101,19 @@ export async function askKrishiSakhi(
         { apiVersion: modelCfg.apiVersion }
       );
 
-      // Clean and validate chat history for Gemini API
+      // Clean and validate chat history for Gemini API.
+      // Free tier mitigation: Limit history to last 6 messages to avoid hitting GenerateContentInputTokensPerModelPerMinute quotas.
       // SDK requirements: Must start with "user" role and alternate strictly user -> model -> user -> model.
+      const maxHistoryLength = 6;
+      let startIdx = history.length > maxHistoryLength ? history.length - maxHistoryLength : 0;
+      while (startIdx < history.length && history[startIdx]?.role !== "user") {
+        startIdx++;
+      }
+      const slicedHistory = history.slice(startIdx);
+
       const cleanHistory: ChatMessage[] = [];
       let expectedRole: "user" | "model" = "user";
-      for (const msg of history) {
+      for (const msg of slicedHistory) {
         if (msg.role === expectedRole) {
           cleanHistory.push(msg);
           expectedRole = expectedRole === "user" ? "model" : "user";

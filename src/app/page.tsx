@@ -443,24 +443,95 @@ export default function HomePage() {
   // Speak specific text aloud
   const handleSpeakMessage = (text: string) => {
     if (typeof window !== "undefined" && "speechSynthesis" in window) {
+      // 1. Cancel any active speech synthesis and stop any active microphone listening to prevent resource locks
       window.speechSynthesis.cancel();
+      /* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call */
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop();
+        } catch (e) {
+          console.warn("Failed to stop recognition before speaking:", e);
+        }
+      }
+      /* eslint-enable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call */
+      setIsListening(false);
+
       const utterance = new SpeechSynthesisUtterance(text);
-      
+      const voices = window.speechSynthesis.getVoices();
+
+      // Check if text is written in Devanagari script (Hindi/Sanskrit/etc.)
+      const containsDevanagari = /[\u0900-\u097F]/.test(text);
+
       if (lang === "kn") {
-        const voices = window.speechSynthesis.getVoices();
-        const knVoice = voices.find(v => v.lang.startsWith("kn") || v.name.toLowerCase().includes("kannada"));
+        // Prioritize case-insensitive matching for natural sounding Kannada voices
+        const knVoice = voices.find(v => {
+          const nameLower = v.name.toLowerCase();
+          const langLower = v.lang.toLowerCase();
+          return (
+            nameLower.includes("sapna") || 
+            nameLower.includes("gagan") || 
+            langLower === "kn-in" ||
+            langLower.startsWith("kn") || 
+            nameLower.includes("kannada")
+          );
+        });
         if (knVoice) {
           utterance.voice = knVoice;
         }
         utterance.lang = "kn-IN";
+      } else if (containsDevanagari) {
+        // If text contains Hindi characters, select a Hindi voice case-insensitively
+        const hiVoice = voices.find(v => {
+          const nameLower = v.name.toLowerCase();
+          const langLower = v.lang.toLowerCase();
+          return (
+            nameLower.includes("swara") || 
+            nameLower.includes("madhur") || 
+            nameLower.includes("kanya") || 
+            nameLower.includes("google हिन्दी") ||
+            nameLower.includes("hindi") ||
+            langLower === "hi-in" ||
+            langLower.startsWith("hi")
+          );
+        });
+        if (hiVoice) {
+          utterance.voice = hiVoice;
+        }
+        utterance.lang = "hi-IN";
       } else {
-        const voices = window.speechSynthesis.getVoices();
-        const enVoice = voices.find(v => v.lang.startsWith("en") && (v.name.includes("India") || v.lang.includes("IN")));
+        // Prioritize case-insensitive matching for natural Indian English voices
+        const enVoice = voices.find(v => {
+          const nameLower = v.name.toLowerCase();
+          const langLower = v.lang.toLowerCase();
+          return (
+            nameLower.includes("neerja") || 
+            nameLower.includes("prabhat") || 
+            nameLower.includes("rishi") || 
+            nameLower.includes("isha") || 
+            nameLower.includes("veena") || 
+            nameLower.includes("google english (india)") ||
+            (langLower.startsWith("en") && (nameLower.includes("india") || langLower.includes("in")))
+          );
+        });
         if (enVoice) {
           utterance.voice = enVoice;
         }
         utterance.lang = "en-IN";
       }
+
+      // Slightly relaxed speed for clearer comprehension
+      utterance.rate = 0.95;
+
+      // Debug log selected voice
+      console.log("Selected TTS Voice:", utterance.voice ? utterance.voice.name : "Default Voice", "Locale:", utterance.lang);
+
+      // Event handlers to prevent voice synthesis engine freezes
+      utterance.onerror = (e) => {
+        console.error("SpeechSynthesisUtterance error event:", e);
+      };
+      utterance.onend = () => {
+        console.log("SpeechSynthesisUtterance ended successfully.");
+      };
       
       window.speechSynthesis.speak(utterance);
     }
@@ -530,6 +601,11 @@ export default function HomePage() {
       }
     } catch (err) {
       console.error("Chat error:", err);
+      // Append a clear error fallback bubble so that the UI does not freeze or stay silent
+      const errorMsg = lang === "kn" 
+        ? "ಕ್ಷಮಿಸಿ, ಕೃಷಿ ಸಖಿ ಎಪಿಐ ಜೊತೆ ಸಂಪರ್ಕಿಸಲು ಸಾಧ್ಯವಾಗುತ್ತಿಲ್ಲ. ದಯವಿಟ್ಟು ಮತ್ತೊಮ್ಮೆ ಪ್ರಯತ್ನಿಸಿ."
+        : "Sorry, I am unable to connect to the Krishi Sakhi API. Please check your network or try again.";
+      setMessages((prev) => [...prev, { role: "model", text: errorMsg }]);
     } finally {
       setLoadingChat(false);
     }
