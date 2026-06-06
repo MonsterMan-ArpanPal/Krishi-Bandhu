@@ -263,7 +263,7 @@ export default function HomePage() {
   const [weatherSim, setWeatherSim] = useState<"sunny" | "rainy" | "dry" | "pest">("sunny");
 
   // Daily AI advisory state
-  const [dailyAdvisory, setDailyAdvisory] = useState<string>("Spray pesticides today, heavy rain expected tomorrow.");
+  const [dailyAdvisory, setDailyAdvisory] = useState<string>("");
   const [loadingAdvisory, setLoadingAdvisory] = useState<boolean>(false);
 
   // Chat Interface State
@@ -1129,7 +1129,7 @@ export default function HomePage() {
                       ) : (
                         <div className="space-y-2">
                           <p className="text-sm font-semibold text-[#404943] leading-relaxed whitespace-pre-line">
-                            {renderFormattedText(dailyAdvisory)}
+                            {renderFormattedText(dailyAdvisory || (lang === "kn" ? "ಸೂಕ್ತ ಕೃಷಿ ಸಲಹೆಯನ್ನು ಪಡೆಯಲು ಹವಾಮಾನವನ್ನು ಬದಲಿಸಿ ಅಥವಾ ಲೋಡ್ ಮಾಡಿ." : "Select or change weather simulation to load tailored AI advice."))}
                           </p>
                           {lang === "kn" ? (
                             <p className="text-xs text-slate-400 leading-normal font-medium italic">
