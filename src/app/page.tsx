@@ -29,6 +29,8 @@ import {
   ChevronRight,
   Sun,
   CloudRain,
+  Activity,
+  Cpu,
 } from "lucide-react";
 import {
   getProfiles,
@@ -39,6 +41,7 @@ import {
   deleteLogEntry,
   askAI,
   getAIAdvisory,
+  analyzeTelemetry,
 } from "~/server/actions";
 import {
   karnatakaDistricts,
@@ -132,6 +135,25 @@ const t = {
     activityNavMobile: "ಚಟುವಟಿಕೆ",
     logPlaceholder: "ಉದಾ: ೨ ಎಕರೆಯಲ್ಲಿ ರಾಗಿ ಬಿತ್ತಿದೆ...",
     namePlaceholder: "ಉದಾ: ರಾಮಪ್ಪ ಗೌಡ",
+    iot: "ಐಒಟಿ ಮಾಹಿತಿ",
+    iotTitle: "ಐಒಟಿ ಸಂವೇದಕ ಮಾಹಿತಿ",
+    iotDesc: "ನಿಮ್ಮ ತೋಟದಿಂದ ಲೈವ್ ಮಣ್ಣಿನ ಮತ್ತು ಹವಾಮಾನ ಪರಿಸ್ಥಿತಿಗಳು.",
+    statusLive: "ಲೈವ್",
+    statusSimulated: "ಸಿಮ್ಯುಲೇಟೆಡ್",
+    statusDisconnected: "ಸಂಪರ್ಕ ಕಡಿತಗೊಂಡಿದೆ",
+    lastUpdated: "ಕೊನೆಯದಾಗಿ ನವೀಕರಿಸಿದ್ದು",
+    secondsAgo: " ಸೆಕೆಂಡುಗಳ ಹಿಂದೆ",
+    apiEndpoint: "ಎಪಿಐ ಎಂಡ್ ಪಾಯಿಂಟ್",
+    simulateData: "ಲೈವ್ ಡೇಟಾ ಸಿಮ್ಯುಲೇಟ್ ಮಾಡಿ",
+    sensorMoisture: "ಮಣ್ಣಿನ ತೇವಾಂಶ",
+    sensorTemp: "ತಾಪಮಾನ",
+    sensorHumidity: "ಆರ್ದ್ರತೆ",
+    sensorLight: "ಬೆಳಕು",
+    soilScientist: "ಡಿಜಿಟಲ್ ಮಣ್ಣಿನ ವಿಜ್ಞಾನಿ",
+    healthy: "ಆರೋಗ್ಯಕರ",
+    attention: "ಗಮನ ಹರಿಸಿ",
+    critical: "ಅಪಾಯಕಾರಿ",
+    askSoilScientist: "ಮಣ್ಣಿನ ವಿಜ್ಞಾನಿ ಜೊತೆ ಚರ್ಚಿಸಿ",
   },
   en: {
     title: "Krishi Bandhu",
@@ -216,6 +238,25 @@ const t = {
     activityNavMobile: "Activity",
     logPlaceholder: "e.g. Sowed Ragi on 2 acres...",
     namePlaceholder: "e.g. Ramappa Gowda",
+    iot: "IoT Telemetry",
+    iotTitle: "IoT Sensor Telemetry",
+    iotDesc: "Real-time soil and ambient environmental conditions from your farm.",
+    statusLive: "Live",
+    statusSimulated: "Simulated",
+    statusDisconnected: "Disconnected",
+    lastUpdated: "Last updated",
+    secondsAgo: "s ago",
+    apiEndpoint: "API Endpoint",
+    simulateData: "Simulate Live Data",
+    sensorMoisture: "Soil Moisture",
+    sensorTemp: "Air Temp",
+    sensorHumidity: "Air Humidity",
+    sensorLight: "Sunlight",
+    soilScientist: "Digital Soil Scientist",
+    healthy: "Healthy",
+    attention: "Attention",
+    critical: "Critical",
+    askSoilScientist: "Ask Digital Soil Scientist",
   },
 };
 
@@ -244,7 +285,7 @@ interface FarmActivityLog {
 
 export default function HomePage() {
   const [lang, setLang] = useState<"en" | "kn">("en");
-  const [activeTab, setActiveTab] = useState<"dashboard" | "chat" | "activity" | "profile">("dashboard");
+  const [activeTab, setActiveTab] = useState<"dashboard" | "chat" | "activity" | "profile" | "iot">("dashboard");
   const [profiles, setProfiles] = useState<FarmerProfile[]>([]);
   const [activeProfile, setActiveProfile] = useState<FarmerProfile | null>(null);
   const [logs, setLogs] = useState<FarmActivityLog[]>([]);
@@ -279,6 +320,30 @@ export default function HomePage() {
   const [isListening, setIsListening] = useState<boolean>(false);
   const [speechError, setSpeechError] = useState<string | null>(null);
   const [speakingIdx, setSpeakingIdx] = useState<number | null>(null);
+
+  // IoT Telemetry States
+  interface TelemetryData {
+    temp: number;
+    humidity: number;
+    moisture: number;
+    light: number;
+    timestamp: string;
+  }
+  const [telemetryHistory, setTelemetryHistory] = useState<TelemetryData[]>([]);
+  const [liveData, setLiveData] = useState<TelemetryData | null>(null);
+  const [isSimulating, setIsSimulating] = useState<boolean>(false);
+  const [connectionStatus, setConnectionStatus] = useState<"live" | "simulated" | "disconnected">("disconnected");
+  const [activeMetric, setActiveMetric] = useState<"moisture" | "temp" | "humidity" | "light">("moisture");
+  const [lastUpdateTime, setLastUpdateTime] = useState<Date | null>(null);
+  const [secondsSinceUpdate, setSecondsSinceUpdate] = useState<number>(0);
+  
+  // AI Diagnostics state
+  const [soilScientistInsight, setSoilScientistInsight] = useState<string>("");
+  const [loadingSoilInsight, setLoadingSoilInsight] = useState<boolean>(false);
+
+  const [showToast, setShowToast] = useState<boolean>(false);
+  const [toastMessage, setToastMessage] = useState<string>("");
+  const liveConnectedRef = useRef(false);
 
   const chatEndRef = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -330,6 +395,189 @@ export default function HomePage() {
     }
     void loadData();
   }, []);
+
+  const getSoilHealthScore = (moisture: number, temp: number, humidity: number, light: number) => {
+    let score = 100;
+    
+    // Penalize Moisture deviation (Optimal: 50-80)
+    if (moisture < 50) score -= (50 - moisture) * 1.2;
+    else if (moisture > 80) score -= (moisture - 80) * 1.0;
+    
+    // Penalize Temp deviation (Optimal: 20-35)
+    if (temp < 20) score -= (20 - temp) * 1.5;
+    else if (temp > 35) score -= (temp - 35) * 1.5;
+    
+    // Penalize Humidity deviation (Optimal: 55-80)
+    if (humidity < 55) score -= (55 - humidity) * 0.5;
+    else if (humidity > 80) score -= (humidity - 80) * 0.4;
+    
+    // Penalize Light deviation (Optimal: 50-85)
+    if (light < 50) score -= (50 - light) * 0.6;
+    else if (light > 85) score -= (light - 85) * 0.5;
+    
+    return Math.max(10, Math.min(100, Math.round(score)));
+  };
+
+  const getSoilHealthLabel = (score: number) => {
+    if (score >= 80) return t[lang].healthy;
+    if (score >= 60) return t[lang].attention;
+    return t[lang].critical;
+  };
+
+  const getSoilHealthColor = (score: number) => {
+    if (score >= 80) return "#10b981"; // emerald-500
+    if (score >= 60) return "#f59e0b"; // amber-500
+    return "#ef4444"; // red-500
+  };
+
+  // Poll telemetry endpoint or simulate
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    
+    const fetchTelemetry = async () => {
+      try {
+        const res = await fetch("/api/iot");
+        if (res.ok) {
+          const data = (await res.json()) as TelemetryData[];
+          if (data.length > 0) {
+            setTelemetryHistory(data);
+            setLiveData(data[data.length - 1] ?? null);
+            setConnectionStatus((prev) => {
+              if (prev !== "live" && !liveConnectedRef.current) {
+                setToastMessage(
+                  lang === "kn"
+                    ? "🛰️ ESP32 ನೋಡ್ ಯಶಸ್ವಿಯಾಗಿ ಸಂಪರ್ಕಗೊಂಡಿದೆ!"
+                    : "🛰️ ESP32 Node Connected Successfully!"
+                );
+                setShowToast(true);
+                liveConnectedRef.current = true;
+                setTimeout(() => setShowToast(false), 4000);
+              }
+              return "live";
+            });
+            setLastUpdateTime(new Date());
+            setSecondsSinceUpdate(0);
+          } else {
+            setConnectionStatus((prev) => {
+              if (prev === "live") {
+                liveConnectedRef.current = false;
+                return "disconnected";
+              }
+              return prev;
+            });
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch telemetry:", err);
+      }
+    };
+
+    if (isSimulating) {
+      setConnectionStatus("simulated");
+      setLastUpdateTime(new Date());
+      setSecondsSinceUpdate(0);
+      
+      // Seed initial history if empty
+      setTelemetryHistory(prev => {
+        if (prev.length === 0) {
+          const initialData: TelemetryData[] = [];
+          const now = new Date();
+          for (let i = 20; i >= 0; i--) {
+            const timeStr = new Date(now.getTime() - i * 5000).toLocaleTimeString("en-US", { hour12: false });
+            initialData.push({
+              temp: parseFloat((26 + Math.sin(i * 0.5) * 2 + Math.random() * 0.5).toFixed(1)),
+              humidity: Math.round(60 + Math.cos(i * 0.5) * 5 + Math.random() * 2),
+              moisture: Math.round(45 + Math.sin(i * 0.3) * 8 + Math.random() * 3),
+              light: Math.round(75 + Math.cos(i * 0.4) * 10 + Math.random() * 4),
+              timestamp: timeStr,
+            });
+          }
+          setLiveData(initialData[initialData.length - 1] ?? null);
+          return initialData;
+        }
+        return prev;
+      });
+
+      // Update simulation values every 3 seconds
+      interval = setInterval(() => {
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString("en-US", { hour12: false });
+        
+        setTelemetryHistory(prev => {
+          const last = prev[prev.length - 1] ?? { temp: 28, humidity: 60, moisture: 45, light: 70 };
+          const nextTemp = Math.max(15, Math.min(45, last.temp + (Math.random() - 0.5) * 0.8));
+          const nextHum = Math.max(20, Math.min(98, last.humidity + (Math.random() - 0.5) * 2));
+          const nextMoist = Math.max(5, Math.min(100, last.moisture + (Math.random() - 0.5) * 3));
+          const nextLight = Math.max(0, Math.min(100, last.light + (Math.random() - 0.5) * 4));
+          
+          const newReading: TelemetryData = {
+            temp: parseFloat(nextTemp.toFixed(1)),
+            humidity: Math.round(nextHum),
+            moisture: Math.round(nextMoist),
+            light: Math.round(nextLight),
+            timestamp: timeStr,
+          };
+          
+          setLiveData(newReading);
+          setLastUpdateTime(new Date());
+          setSecondsSinceUpdate(0);
+          
+          const updated = [...prev, newReading];
+          if (updated.length > 40) updated.shift();
+          return updated;
+        });
+      }, 3000);
+    } else {
+      // Fetch once immediately
+      void fetchTelemetry();
+      // Poll every 3 seconds
+      interval = setInterval(() => { void fetchTelemetry(); }, 3000);
+    }
+
+    return () => clearInterval(interval);
+  }, [isSimulating, lang]);
+
+  // Seconds since last update counter
+  useEffect(() => {
+    const timer = setInterval(() => {
+      if (lastUpdateTime) {
+        const elapsed = Math.round((new Date().getTime() - lastUpdateTime.getTime()) / 1000);
+        setSecondsSinceUpdate(elapsed);
+        
+        // If live reading is stale for > 12 seconds, set disconnected
+        if (elapsed > 12 && connectionStatus === "live") {
+          setConnectionStatus("disconnected");
+        }
+      }
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [lastUpdateTime, connectionStatus]);
+
+  const handleAnalyzeTelemetry = async () => {
+    if (!activeProfile || !liveData) return;
+    setLoadingSoilInsight(true);
+    setSoilScientistInsight("");
+    try {
+      const insight = await analyzeTelemetry(
+        activeProfile.id,
+        liveData.temp,
+        liveData.humidity,
+        liveData.moisture,
+        liveData.light,
+        lang
+      );
+      setSoilScientistInsight(insight);
+    } catch (err) {
+      console.error("Failed to analyze telemetry:", err);
+      setSoilScientistInsight(
+        lang === "kn"
+          ? "ದೋಷ: ಮಣ್ಣಿನ ವಿಶ್ಲೇಷಣೆ ಮಾಡಲು ಸಾಧ್ಯವಾಗಿಲ್ಲ."
+          : "Error: Unable to complete soil analysis."
+      );
+    } finally {
+      setLoadingSoilInsight(false);
+    }
+  };
 
   // Fetch logs and advisory when active profile or weather changes
   useEffect(() => {
@@ -897,6 +1145,17 @@ export default function HomePage() {
             >
               <History size={18} />
               <span>{t[lang].activityLog}</span>
+            </button>
+            <button 
+              onClick={() => setActiveTab("iot")}
+              className={`flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm transition-all text-left font-medium active:opacity-80 ${
+                activeTab === "iot"
+                  ? "bg-secondary-fixed text-on-secondary-fixed shadow-sm"
+                  : "text-[#404943] hover:bg-surface-container-high"
+              }`}
+            >
+              <Cpu size={18} className={activeTab === "iot" ? "fill-[#2f1500]/10" : ""} />
+              <span>{t[lang].iot}</span>
             </button>
             <button 
               onClick={() => setActiveTab("profile")}
@@ -1889,7 +2148,507 @@ export default function HomePage() {
             </div>
           )}
 
+          {/* ================================================================= */}
+          {/* VIEW: IoT TELEMETRY                                              */}
+          {/* ================================================================= */}
+          {activeTab === "iot" && (
+            <div className="max-w-6xl mx-auto space-y-6 animate-fade-in">
+              
+              {/* Page Header */}
+              <div>
+                <h2 className="text-3xl font-bold text-[#191c1b]">{t[lang].iotTitle}</h2>
+                <p className="text-sm font-semibold text-[#404943] mt-1">{t[lang].iotDesc}</p>
+              </div>
+
+              {/* Connection Status Bar */}
+              <div className="bg-white/80 backdrop-blur-md border border-glass-stroke rounded-2xl p-4 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  {connectionStatus === "live" && (
+                    <div className="flex items-center gap-2">
+                      <span className="relative flex h-3 w-3">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                      </span>
+                      <span className="text-xs font-bold text-emerald-600 uppercase tracking-wider">{t[lang].statusLive}</span>
+                      <span className="text-xs font-semibold text-slate-400 border-l border-slate-200 pl-2">
+                        {t[lang].lastUpdated}: {secondsSinceUpdate}{t[lang].secondsAgo}
+                      </span>
+                    </div>
+                  )}
+                  {connectionStatus === "simulated" && (
+                    <div className="flex items-center gap-2">
+                      <span className="relative flex h-3 w-3">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-3 w-3 bg-amber-500"></span>
+                      </span>
+                      <span className="text-xs font-bold text-amber-600 uppercase tracking-wider">{t[lang].statusSimulated}</span>
+                    </div>
+                  )}
+                  {connectionStatus === "disconnected" && (
+                    <div className="flex items-center gap-2">
+                      <span className="h-3 w-3 rounded-full bg-red-500 shadow-sm" />
+                      <span className="text-xs font-bold text-red-600 uppercase tracking-wider">{t[lang].statusDisconnected}</span>
+                    </div>
+                  )}
+                  
+                  {/* API Guide */}
+                  <span className="hidden lg:inline-block text-[10px] font-semibold text-slate-400 bg-slate-50 border border-slate-200/60 px-3 py-1 rounded-lg">
+                    🔗 {t[lang].apiEndpoint}: <code className="text-[#1B835E] font-mono select-all font-bold">http://&lt;your-ip&gt;:3000/api/iot</code>
+                  </span>
+                </div>
+
+                {/* Connection Buttons */}
+                <div className="flex items-center gap-3 w-full md:w-auto justify-end">
+                  <label className="relative inline-flex items-center cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={isSimulating}
+                      onChange={(e) => {
+                        setIsSimulating(e.target.checked);
+                        if (e.target.checked) {
+                          setConnectionStatus("simulated");
+                          setToastMessage(lang === "kn" ? "🛰️ ಐಒಟಿ ಸಿಮ್ಯುಲೇಶನ್ ಪ್ರಾರಂಭವಾಗಿದೆ" : "🛰️ IoT Simulation Initialized");
+                          setShowToast(true);
+                          setTimeout(() => setShowToast(false), 3000);
+                        } else {
+                          setConnectionStatus("disconnected");
+                          setTelemetryHistory([]);
+                          setLiveData(null);
+                          liveConnectedRef.current = false;
+                        }
+                      }}
+                      className="sr-only peer"
+                    />
+                    <div className="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#1B835E]" />
+                    <span className="text-xs font-bold text-slate-500 ml-2">{t[lang].simulateData}</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Live Telemetry View */}
+              {liveData ? (
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                  
+                  {/* Left Column: Gauges and Sparkline Chart (Col-span 8) */}
+                  <div className="lg:col-span-8 space-y-8">
+                    
+                    {/* Gauges Grid */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                      <RadialGauge
+                        value={liveData.moisture}
+                        max={100}
+                        unit="%"
+                        label={t[lang].sensorMoisture}
+                        metricType="moisture"
+                        lang={lang}
+                        icon={<Droplets size={12} className="text-blue-500" />}
+                      />
+                      <RadialGauge
+                        value={liveData.temp}
+                        max={50}
+                        unit="°C"
+                        label={t[lang].sensorTemp}
+                        metricType="temp"
+                        lang={lang}
+                        icon={<Sun size={12} className="text-orange-500" />}
+                      />
+                      <RadialGauge
+                        value={liveData.humidity}
+                        max={100}
+                        unit="%"
+                        label={t[lang].sensorHumidity}
+                        metricType="humidity"
+                        lang={lang}
+                        icon={<CloudRain size={12} className="text-teal-500" />}
+                      />
+                      <RadialGauge
+                        value={liveData.light}
+                        max={100}
+                        unit="%"
+                        label={t[lang].sensorLight}
+                        metricType="light"
+                        lang={lang}
+                        icon={<Sparkles size={12} className="text-yellow-500" />}
+                      />
+                    </div>
+
+                    {/* Sparkline Multi-line Chart Panel */}
+                    <div className="bg-white/70 backdrop-blur-md border border-glass-stroke rounded-2xl p-6 shadow-sm space-y-4">
+                      <div className="flex flex-wrap items-center justify-between border-b border-glass-stroke pb-3 gap-2">
+                        <div className="flex items-center gap-2">
+                          <Activity size={18} className="text-[#1B835E]" />
+                          <h3 className="text-sm font-extrabold text-[#191c1b] uppercase tracking-wider">
+                            {lang === "kn" ? "ಐಒಟಿ ಟ್ರೆಂಡ್‌ಗಳು (Real-time Timeline)" : "Live Telemetry Trends (Real-time Timeline)"}
+                          </h3>
+                        </div>
+                        
+                        {/* Legend row */}
+                        <div className="flex items-center gap-3 text-[9px] font-bold text-slate-400">
+                          <div className="flex items-center gap-1">
+                            <span className="w-2.5 h-1 rounded-full bg-[#3b82f6]" />
+                            <span>{t[lang].sensorMoisture}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <span className="w-2.5 h-1 rounded-full bg-[#f97316]" />
+                            <span>{t[lang].sensorTemp}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <span className="w-2.5 h-1 rounded-full bg-[#0d9488]" />
+                            <span>{t[lang].sensorHumidity}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <span className="w-2.5 h-1 rounded-full bg-[#eab308]" />
+                            <span>{t[lang].sensorLight}</span>
+                          </div>
+                        </div>
+
+                        {/* Metric filter buttons */}
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          {(["moisture", "temp", "humidity", "light"] as const).map((metric) => {
+                            const colors = {
+                              moisture: "border-blue-500/20 text-blue-600 bg-blue-50/50 active:bg-blue-100",
+                              temp: "border-orange-500/20 text-orange-600 bg-orange-50/50 active:bg-orange-100",
+                              humidity: "border-teal-500/20 text-teal-600 bg-teal-50/50 active:bg-teal-100",
+                              light: "border-yellow-600/20 text-yellow-600 bg-yellow-50/50 active:bg-yellow-100",
+                            };
+                            const isActive = activeMetric === metric;
+                            const label = 
+                              metric === "moisture" ? t[lang].sensorMoisture :
+                              metric === "temp" ? t[lang].sensorTemp :
+                              metric === "humidity" ? t[lang].sensorHumidity : t[lang].sensorLight;
+                              
+                            return (
+                              <button
+                                key={metric}
+                                onClick={() => setActiveMetric(metric)}
+                                className={`px-3 py-1 rounded-full border text-[10px] font-bold transition-all active:scale-95 cursor-pointer shadow-sm ${
+                                  isActive 
+                                    ? `${colors[metric].split(" ")[1]} ${colors[metric].split(" ")[2]} border-current` 
+                                    : "border-slate-200 bg-white text-slate-400 hover:text-slate-600"
+                                }`}
+                              >
+                                {label}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Sparkline Canvas rendering */}
+                      {(() => {
+                        const historySlice = telemetryHistory.slice(-20);
+                        return telemetryHistory.length > 1 ? (
+                          <div className="relative w-full h-44 flex flex-col justify-between pt-2">
+                            <svg className="w-full h-32" viewBox="0 0 500 100" preserveAspectRatio="none">
+                              {/* Grid Lines */}
+                              <line x1="0" y1="20" x2="500" y2="20" className="stroke-slate-100" strokeWidth="1" strokeDasharray="4,4" />
+                              <line x1="0" y1="50" x2="500" y2="50" className="stroke-slate-100" strokeWidth="1" strokeDasharray="4,4" />
+                              <line x1="0" y1="80" x2="500" y2="80" className="stroke-slate-100" strokeWidth="1" strokeDasharray="4,4" />
+                              
+                              {/* Generate Path Coordinates */}
+                              {(() => {
+                                const width = 500;
+                                const height = 100;
+                                const metrics = {
+                                  moisture: historySlice.map(d => d.moisture),
+                                  temp: historySlice.map(d => ((d.temp - 15) / 30) * 100),
+                                  humidity: historySlice.map(d => d.humidity),
+                                  light: historySlice.map(d => d.light),
+                                };
+                                const colorMap = {
+                                  moisture: "#3b82f6",
+                                  temp: "#f97316",
+                                  humidity: "#0d9488",
+                                  light: "#eab308",
+                                };
+                                
+                                const activeData = metrics[activeMetric];
+                                const activeColor = colorMap[activeMetric];
+                                
+                                const pathD = generateSvgPath(activeData, width, height);
+                                const areaD = pathD ? `${pathD} L 500,100 L 0,100 Z` : "";
+                                
+                                return (
+                                  <>
+                                    {/* Area gradient under active path */}
+                                    {areaD && (
+                                      <path
+                                        d={areaD}
+                                        fill={`url(#gradient-${activeMetric})`}
+                                        className="transition-all duration-700 ease-out"
+                                      />
+                                    )}
+                                    
+                                    {/* Gradient definitions */}
+                                    <defs>
+                                      <linearGradient id={`gradient-moisture`} x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.25" />
+                                        <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.0" />
+                                      </linearGradient>
+                                      <linearGradient id={`gradient-temp`} x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stopColor="#f97316" stopOpacity="0.25" />
+                                        <stop offset="100%" stopColor="#f97316" stopOpacity="0.0" />
+                                      </linearGradient>
+                                      <linearGradient id={`gradient-humidity`} x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stopColor="#0d9488" stopOpacity="0.25" />
+                                        <stop offset="100%" stopColor="#0d9488" stopOpacity="0.0" />
+                                      </linearGradient>
+                                      <linearGradient id={`gradient-light`} x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stopColor="#eab308" stopOpacity="0.25" />
+                                        <stop offset="100%" stopColor="#eab308" stopOpacity="0.0" />
+                                      </linearGradient>
+                                    </defs>
+  
+                                    {/* Passive series paths (colored but faded behind) */}
+                                    {(Object.keys(metrics) as Array<keyof typeof metrics>).map((key) => {
+                                      if (key === activeMetric) return null;
+                                      return (
+                                        <path
+                                          key={key}
+                                          d={generateSvgPath(metrics[key], width, height)}
+                                          fill="none"
+                                          stroke={colorMap[key]}
+                                          strokeWidth="1.5"
+                                          strokeOpacity="0.3"
+                                          strokeDasharray="3,3"
+                                          className="transition-all duration-700"
+                                        />
+                                      );
+                                    })}
+  
+                                    {/* Active series path line */}
+                                    {pathD && (
+                                      <path
+                                        d={pathD}
+                                        fill="none"
+                                        stroke={activeColor}
+                                        strokeWidth="3.5"
+                                        strokeLinecap="round"
+                                        className="transition-all duration-700 ease-out"
+                                      />
+                                    )}
+  
+                                    {/* Pulsing indicator at the latest data node */}
+                                    {activeData.length > 0 && (() => {
+                                      const lastVal = activeData[activeData.length - 1] ?? 50;
+                                      const xVal = (activeData.length - 1) / Math.max(1, activeData.length - 1) * width;
+                                      const yVal = height - (lastVal / 100) * (height - 10) - 5;
+                                      return (
+                                        <>
+                                          <circle cx={xVal} cy={yVal} r="6" fill={activeColor} className="animate-ping opacity-50" />
+                                          <circle cx={xVal} cy={yVal} r="4" fill={activeColor} className="stroke-white" strokeWidth="2" />
+                                        </>
+                                      );
+                                    })()}
+                                  </>
+                                );
+                              })()}
+                            </svg>
+  
+                            {/* X-Axis timeline labels */}
+                            <div className="flex justify-between items-center text-[9px] font-bold text-slate-400 border-t border-glass-stroke pt-2.5">
+                              <span>{historySlice[0]?.timestamp}</span>
+                              <span>{historySlice[Math.floor(historySlice.length / 2)]?.timestamp}</span>
+                              <span>{historySlice[historySlice.length - 1]?.timestamp}</span>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="py-12 text-center text-xs text-slate-400 italic">
+                            {lang === "kn" ? "ಟೆಲಿಮೆಟ್ರಿ ಟೈಮ್‌ಲೈನ್ ಪ್ಯಾಕೆಟ್‌ಗಳನ್ನು ಸಂಗ್ರಹಿಸಲಾಗುತ್ತಿದೆ..." : "Gathering telemetry timeline packets..."}
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  </div>
+
+                  {/* Right Column: Soil Scientist & Action Panel (Col-span 4) */}
+                  <div className="lg:col-span-4 space-y-6">
+                    
+                    {/* Digital Soil Scientist Card */}
+                    {(() => {
+                      const healthScore = getSoilHealthScore(liveData.moisture, liveData.temp, liveData.humidity, liveData.light);
+                      const healthColor = getSoilHealthColor(healthScore);
+                      const healthLabel = getSoilHealthLabel(healthScore);
+                      
+                      return (
+                        <div className="bg-white/80 backdrop-blur-md border border-glass-stroke rounded-2xl p-6 shadow-sm flex flex-col justify-between h-full relative overflow-hidden group">
+                          <div className="absolute top-0 right-0 w-32 h-32 rounded-bl-full opacity-10 blur-xl pointer-events-none" style={{ backgroundColor: healthColor }} />
+                          
+                          <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                              <span className="text-slate-400 font-extrabold text-[10px] uppercase tracking-wider">
+                                🔬 {t[lang].soilScientist}
+                              </span>
+                              <span 
+                                className="font-bold text-[10px] px-2.5 py-0.5 rounded-full uppercase tracking-wider shadow-sm text-white transition-colors duration-500"
+                                style={{ backgroundColor: healthColor }}
+                              >
+                                {healthLabel}
+                              </span>
+                            </div>
+
+                            {/* Visual Score and Traffic Light Indicators */}
+                            <div className="flex items-center justify-around py-4 bg-slate-50 rounded-2xl border border-glass-stroke/60 p-4">
+                              {/* Circular Score display */}
+                              <div className="relative w-24 h-24 flex items-center justify-center shrink-0">
+                                <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                                  <circle cx="50" cy="50" r="40" className="stroke-slate-100" strokeWidth="8" fill="transparent" />
+                                  <circle 
+                                    cx="50" 
+                                    cy="50" 
+                                    r="40" 
+                                    stroke={healthColor} 
+                                    strokeWidth="8" 
+                                    fill="transparent" 
+                                    strokeDasharray={2 * Math.PI * 40}
+                                    strokeDashoffset={2 * Math.PI * 40 - (healthScore / 100) * 2 * Math.PI * 40}
+                                    strokeLinecap="round"
+                                    className="transition-all duration-700 ease-out"
+                                  />
+                                </svg>
+                                <div className="absolute flex flex-col items-center">
+                                  <span className="text-2xl font-black tracking-tight" style={{ color: "#191c1b" }}>{healthScore}</span>
+                                  <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Score</span>
+                                </div>
+                              </div>
+
+                              {/* Vertical Traffic Light */}
+                              <div className="flex flex-col items-center justify-center bg-[#1e293b] p-3 rounded-2xl shadow-inner border border-slate-700 w-14 gap-2 shrink-0">
+                                {/* Red Light (Critical) */}
+                                <div className="relative">
+                                  <div 
+                                    className={`w-6 h-6 rounded-full transition-all duration-500 ${
+                                      healthLabel === t[lang].critical 
+                                        ? "bg-red-500 shadow-[0_0_12px_#ef4444] opacity-100 scale-105" 
+                                        : "bg-red-950 opacity-30"
+                                    }`}
+                                  />
+                                  {healthLabel === t[lang].critical && (
+                                    <span className="absolute inset-0 rounded-full animate-ping bg-red-400 opacity-40" />
+                                  )}
+                                </div>
+                                {/* Yellow Light (Attention) */}
+                                <div className="relative">
+                                  <div 
+                                    className={`w-6 h-6 rounded-full transition-all duration-500 ${
+                                      healthLabel === t[lang].attention 
+                                        ? "bg-amber-500 shadow-[0_0_12px_#f59e0b] opacity-100 scale-105" 
+                                        : "bg-amber-950 opacity-30"
+                                    }`}
+                                  />
+                                  {healthLabel === t[lang].attention && (
+                                    <span className="absolute inset-0 rounded-full animate-ping bg-amber-400 opacity-40" />
+                                  )}
+                                </div>
+                                {/* Green Light (Healthy) */}
+                                <div className="relative">
+                                  <div 
+                                    className={`w-6 h-6 rounded-full transition-all duration-500 ${
+                                      healthLabel === t[lang].healthy 
+                                        ? "bg-emerald-500 shadow-[0_0_12px_#10b981] opacity-100 scale-105" 
+                                        : "bg-emerald-950 opacity-30"
+                                    }`}
+                                  />
+                                  {healthLabel === t[lang].healthy && (
+                                    <span className="absolute inset-0 rounded-full animate-ping bg-emerald-400 opacity-40" />
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Health Threshold descriptions */}
+                            <div className="space-y-2.5 pt-2 border-t border-glass-stroke">
+                              <div className="flex items-start gap-2 text-xs font-semibold text-[#404943]">
+                                <span className="h-2 w-2 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
+                                <div>
+                                  <span className="font-extrabold text-[#191c1b]">{t[lang].healthy} (&gt;= 80):</span>{" "}
+                                  {lang === "kn" ? "ಸೂಕ್ತ ಪರಿಸ್ಥಿತಿಗಳು. ಮಣ್ಣಿನ ತೇವಾಂಶ ಮತ್ತು ತಾಪಮಾನ ಆದರ್ಶವಾಗಿದೆ." : "Ideal conditions. Moisture and temperatures are optimal for active crops."}
+                                </div>
+                              </div>
+                              <div className="flex items-start gap-2 text-xs font-semibold text-[#404943]">
+                                <span className="h-2 w-2 rounded-full bg-amber-500 mt-1.5 shrink-0" />
+                                <div>
+                                  <span className="font-extrabold text-[#191c1b]">{t[lang].attention} (60-79):</span>{" "}
+                                  {lang === "kn" ? "ಸ್ವಲ್ಪ ವ್ಯತ್ಯಾಸಗಳಿವೆ. ಮಣ್ಣಿನ ತೇವಾಂಶ ಮತ್ತು ನೆರಳನ್ನು ಗಮನಿಸಿ." : "Mild deviations. Monitor soil moisture or shade parameters."}
+                                </div>
+                              </div>
+                              <div className="flex items-start gap-2 text-xs font-semibold text-[#404943]">
+                                <span className="h-2 w-2 rounded-full bg-red-500 mt-1.5 shrink-0" />
+                                <div>
+                                  <span className="font-extrabold text-[#191c1b]">{t[lang].critical} (&lt; 60):</span>{" "}
+                                  {lang === "kn" ? "ಅಧಿಕ ಮಣ್ಣಿನ ಒತ್ತಡ. ಬೆಳೆ ಎಲೆಗಳು ಶಾಶ್ವತ ಒಣ ಹಾನಿ ಅನುಭವಿಸಬಹುದು." : "High soil stress. Crop leaves may suffer permanent dry damage."}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="mt-6 pt-4 border-t border-glass-stroke">
+                            <button
+                              onClick={handleAnalyzeTelemetry}
+                              disabled={loadingSoilInsight}
+                              className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-[#1B835E] px-4 py-3 text-xs font-bold text-white shadow-md shadow-emerald-700/10 hover:brightness-105 active:scale-98 transition-all min-h-[44px] cursor-pointer disabled:opacity-40"
+                            >
+                              {loadingSoilInsight ? (
+                                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                              ) : (
+                                <Sparkles size={14} className="fill-white/10" />
+                              )}
+                              {t[lang].askSoilScientist}
+                            </button>
+                          </div>
+
+                          {/* AI Diagnostic report box */}
+                          {soilScientistInsight && (
+                            <div className="mt-4 p-4 rounded-xl border border-glass-stroke bg-slate-50/80 relative overflow-hidden animate-fade-in text-xs font-semibold leading-relaxed text-[#191c1b] shadow-inner">
+                              <div className="absolute top-0 left-0 w-1 h-full bg-[#1B835E]" />
+                              <p className="whitespace-pre-line">{soilScientistInsight}</p>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
+                  </div>
+
+                </div>
+              ) : (
+                <div className="bg-white/80 backdrop-blur-md border border-glass-stroke rounded-2xl p-12 shadow-sm text-center flex flex-col items-center justify-center space-y-4">
+                  <div className="h-16 w-16 rounded-full bg-gradient-to-br from-slate-50 to-slate-100 text-slate-400 flex items-center justify-center shadow-inner border border-slate-200/60">
+                    <Cpu size={28} className="animate-pulse" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-[#191c1b] text-base">
+                      {lang === "kn" ? "ಟೆಲಿಮೆಟ್ರಿ ಪ್ಯಾಕೆಟ್‌ಗಳಿಗಾಗಿ ಕಾಯಲಾಗುತ್ತಿದೆ" : "Waiting for Telemetry Packets"}
+                    </h3>
+                    <p className="text-xs text-slate-400 mt-1.5 max-w-sm mx-auto leading-relaxed">
+                      {lang === "kn"
+                        ? "ನಿಮ್ಮ ESP32 ನೋಡ್ ಅನ್ನು Wi-Fi ಗೆ ಸಂಪರ್ಕಿಸಿ ಅಥವಾ ಸೆನ್ಸರ್ ಟೆಲಿಮೆಟ್ರಿ ಚಾರ್ಟ್‌ಗಳನ್ನು ನೋಡಲು \"ಲೈವ್ ಡೇಟಾ ಸಿಮ್ಯುಲೇಟ್ ಮಾಡಿ\" ಆನ್ ಮಾಡಿ."
+                        : 'Connect your ESP32 node to Wi-Fi or turn on "Simulate Live Data" above to begin visualizing sensor telemetry charts.'}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className="h-1.5 w-1.5 rounded-full bg-slate-300 animate-bounce" style={{ animationDelay: "0ms" }} />
+                    <span className="h-1.5 w-1.5 rounded-full bg-slate-300 animate-bounce" style={{ animationDelay: "150ms" }} />
+                    <span className="h-1.5 w-1.5 rounded-full bg-slate-300 animate-bounce" style={{ animationDelay: "300ms" }} />
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
         </main>
+
+        {/* Toast Notification */}
+        <div 
+          className={`fixed top-6 right-6 z-50 bg-slate-900/95 backdrop-blur-md text-white border border-slate-700/50 rounded-2xl px-5 py-3.5 shadow-2xl flex items-center gap-3 transition-all duration-500 transform ${
+            showToast ? "translate-y-0 opacity-100" : "-translate-y-12 opacity-0 pointer-events-none"
+          }`}
+        >
+          <span className="flex h-2.5 w-2.5 relative">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+          </span>
+          <p className="text-xs font-extrabold tracking-wide">{toastMessage}</p>
+        </div>
 
         {/* Global Floating Action Microphone Button (Glows dynamically) */}
         {(activeTab === "dashboard") && activeProfile && (
@@ -1966,6 +2725,18 @@ export default function HomePage() {
           </button>
 
           <button 
+            onClick={() => setActiveTab("iot")}
+            className={`flex flex-col items-center justify-center active:scale-90 transition-transform ${
+              activeTab === "iot"
+                ? "bg-[#ffdcc3] text-[#2f1500] rounded-xl px-4 py-1.5 font-bold"
+                : "text-[#404943]"
+            }`}
+          >
+            <Cpu size={20} className={activeTab === "iot" ? "fill-[#2f1500]/10" : ""} />
+            <span className="text-[10px] font-bold mt-1">{t[lang].iot}</span>
+          </button>
+
+          <button 
             onClick={() => setActiveTab("profile")}
             className={`flex flex-col items-center justify-center active:scale-90 transition-transform ${
               activeTab === "profile"
@@ -1982,6 +2753,141 @@ export default function HomePage() {
     </div>
   );
 }
+
+const generateSvgPath = (data: number[], width: number, height: number) => {
+  if (data.length < 2) return "";
+  const points = data.map((val, idx) => {
+    const x = (idx / (data.length - 1)) * width;
+    const y = height - (val / 100) * (height - 10) - 5;
+    return `${x},${y}`;
+  });
+  return `M ${points.join(" L ")}`;
+};
+
+interface RadialGaugeProps {
+  value: number;
+  max: number;
+  unit: string;
+  label: string;
+  metricType: "moisture" | "temp" | "humidity" | "light";
+  lang: "en" | "kn";
+  icon: React.ReactNode;
+}
+
+const RadialGauge: React.FC<RadialGaugeProps> = ({ value, max, unit, label, metricType, lang, icon }) => {
+  const percentage = Math.min(100, Math.max(0, (value / max) * 100));
+  const radius = 38;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (percentage / 100) * circumference;
+
+  // Color-coded zones with bilingual labels
+  const statusLabels = {
+    healthy: lang === "kn" ? "ಆರೋಗ್ಯಕರ" : "Healthy",
+    attention: lang === "kn" ? "ಗಮನ" : "Attention",
+    critical: lang === "kn" ? "ಅಪಾಯ" : "Critical",
+  };
+
+  let zoneColor = "#10b981";
+  let statusText = statusLabels.healthy;
+
+  if (metricType === "moisture") {
+    if (value < 35 || value > 90) {
+      zoneColor = "#ef4444";
+      statusText = statusLabels.critical;
+    } else if (value < 50 || value > 80) {
+      zoneColor = "#f59e0b";
+      statusText = statusLabels.attention;
+    } else {
+      zoneColor = "#10b981";
+      statusText = statusLabels.healthy;
+    }
+  } else if (metricType === "temp") {
+    if (value < 15 || value > 40) {
+      zoneColor = "#ef4444";
+      statusText = statusLabels.critical;
+    } else if (value < 20 || value > 35) {
+      zoneColor = "#f59e0b";
+      statusText = statusLabels.attention;
+    } else {
+      zoneColor = "#10b981";
+      statusText = statusLabels.healthy;
+    }
+  } else if (metricType === "humidity") {
+    if (value < 40 || value > 90) {
+      zoneColor = "#ef4444";
+      statusText = statusLabels.critical;
+    } else if (value < 55 || value > 80) {
+      zoneColor = "#f59e0b";
+      statusText = statusLabels.attention;
+    } else {
+      zoneColor = "#10b981";
+      statusText = statusLabels.healthy;
+    }
+  } else if (metricType === "light") {
+    if (value < 30 || value > 95) {
+      zoneColor = "#ef4444";
+      statusText = statusLabels.critical;
+    } else if (value < 50 || value > 85) {
+      zoneColor = "#f59e0b";
+      statusText = statusLabels.attention;
+    } else {
+      zoneColor = "#10b981";
+      statusText = statusLabels.healthy;
+    }
+  }
+
+  return (
+    <div className="bg-white/70 backdrop-blur-md border border-glass-stroke rounded-2xl p-5 shadow-sm flex flex-col items-center justify-between text-center relative overflow-hidden group hover:border-slate-300 transition-all animate-fade-in w-full">
+      <div className="absolute top-0 left-0 w-full h-1 transition-colors duration-500" style={{ backgroundColor: zoneColor }} />
+      <div className="flex items-center gap-1.5 text-slate-400 font-bold text-[10px] uppercase tracking-wider mb-3">
+        {icon}
+        <span>{label}</span>
+      </div>
+      
+      <div className="relative w-24 h-24 flex items-center justify-center">
+        <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+          <circle
+            cx="50"
+            cy="50"
+            r={radius}
+            className="stroke-slate-100"
+            strokeWidth="8"
+            fill="transparent"
+          />
+          <circle
+            cx="50"
+            cy="50"
+            r={radius}
+            stroke={zoneColor}
+            strokeWidth="8"
+            fill="transparent"
+            strokeDasharray={circumference}
+            strokeDashoffset={strokeDashoffset}
+            strokeLinecap="round"
+            className="transition-all duration-700 ease-out"
+          />
+        </svg>
+        <div className="absolute flex flex-col items-center justify-center">
+          {/* Subtle animated glow pulse */}
+          <div 
+            className="absolute w-12 h-12 rounded-full blur-md opacity-20 animate-pulse pointer-events-none transition-colors duration-500"
+            style={{ backgroundColor: zoneColor }}
+          />
+          <span className="text-lg font-black text-[#191c1b] tracking-tight relative z-10">{value}</span>
+          <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest relative z-10">{unit}</span>
+        </div>
+      </div>
+
+      {/* Tiny zone status indicator */}
+      <span 
+        className="mt-3 text-[8px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider text-white transition-colors duration-500"
+        style={{ backgroundColor: zoneColor }}
+      >
+        {statusText}
+      </span>
+    </div>
+  );
+};
 
 // Helpers
 function getWeatherText(sim: string, language: "en" | "kn"): string {

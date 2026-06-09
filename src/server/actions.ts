@@ -236,3 +236,68 @@ export async function getAIAdvisory(profileId: number, weatherSim: string, langu
       : "Error: Unable to generate daily advisory card.";
   }
 }
+
+export async function analyzeTelemetry(
+  profileId: number,
+  temp: number,
+  humidity: number,
+  moisture: number,
+  light: number,
+  language: "en" | "kn" = "en"
+) {
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return language === "kn"
+        ? "ದೋಷ: ದಯವಿಟ್ಟು ಲಾಗ್ ಇನ್ ಮಾಡಿ."
+        : "Error: Please log in again.";
+    }
+
+    const profile = await db.farmerProfile.findUnique({
+      where: { id: profileId },
+    });
+
+    if (profile?.userId !== user.id) {
+      return language === "kn"
+        ? "ದೋಷ: ರೈತರ ವಿವರಗಳು ಕಂಡುಬಂದಿಲ್ಲ."
+        : "Error: Profile not found.";
+    }
+
+    const context = {
+      name: profile.name,
+      district: profile.district,
+      zone: profile.zone,
+      soilType: profile.soilType,
+      landSize: profile.landSize,
+      crops: profile.crops.split(","),
+      isIrrigated: profile.isIrrigated,
+    };
+
+    const prompt = language === "kn"
+      ? `ನನ್ನ ಕೃಷಿ ಸಂವೇದಕಗಳ (Sensors) ಲೈವ್ ರೀಡಿಂಗ್ ಈ ಕೆಳಗಿನಂತಿದೆ:
+- ತಾಪಮಾನ: ${temp}°C
+- ಆರ್ದ್ರತೆ: ${humidity}%
+- ಮಣ್ಣಿನ ತೇವಾಂಶ: ${moisture}%
+- ಸೂರ್ಯನ ಬೆಳಕು: ${light}%
+
+ನನ್ನ ಬೆಳೆ: ${profile.crops}
+ದಯವಿಟ್ಟು ಈ ರೀಡಿಂಗ್ ಆಧಾರದ ಮೇಲೆ ನನ್ನ ಬೆಳೆಗೆ ೨-೩ ಸಾಲುಗಳಲ್ಲಿ ನೇರವಾದ ಸಲಹೆಯನ್ನು ನೀಡಿ.`
+      : `My IoT farm sensor readings:
+- Air Temperature: ${temp}°C
+- Air Humidity: ${humidity}%
+- Soil Moisture: ${moisture}%
+- Sunlight Level: ${light}%
+
+Active Crop: ${profile.crops}
+Please analyze these telemetry readings and provide a 2-3 sentence actionable diagnostic report for my crop.`;
+
+    const weatherContext = `IoT Telemetry Reading: Temp ${temp}°C, Humidity ${humidity}%, Soil Moisture ${moisture}%, Light ${light}%`;
+    return await askKrishiSakhi(context, weatherContext, prompt, [], language);
+  } catch (err) {
+    console.error("analyzeTelemetry error:", err);
+    return language === "kn"
+      ? "ದೋಷ: ಮಣ್ಣಿನ ವಿಶ್ಲೇಷಣೆ ಮಾಡಲು ಸಾಧ್ಯವಾಗಿಲ್ಲ."
+      : "Error: Unable to analyze soil health telemetry.";
+  }
+}
