@@ -35,3 +35,11 @@ model FarmActivityLog {
     timestamp DateTime      @default(now())
     profile   FarmerProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
 }
+
+model ChatMessage {
+    id        Int      @id @default(autoincrement())
+    userId    String
+    role      String   // "user" or "model"
+    text      String
+    createdAt DateTime @default(now())
+}

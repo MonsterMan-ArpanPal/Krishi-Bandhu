@@ -522,3 +522,40 @@ export async function getLiveMandiPrices(): Promise<APMCPrice[]> {
     return apmcPrices;
   }
 }
+
+export async function getChatHistory() {
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return [];
+
+    return await db.chatMessage.findMany({
+      where: { userId: user.id },
+      orderBy: { createdAt: "asc" },
+    });
+  } catch (err) {
+    console.error("getChatHistory error:", err);
+    return [];
+  }
+}
+
+export async function saveChatMessage(role: "user" | "model", text: string) {
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+
+    const message = await db.chatMessage.create({
+      data: {
+        userId: user.id,
+        role,
+        text,
+      },
+    });
+    return message;
+  } catch (err) {
+    console.error("saveChatMessage error:", err);
+    return null;
+  }
+}
+

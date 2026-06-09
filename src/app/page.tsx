@@ -43,6 +43,8 @@ import {
   analyzeTelemetry,
   getLiveMandiPrices,
   askAI,
+  getChatHistory,
+  saveChatMessage,
 } from "~/server/actions";
 import {
   karnatakaDistricts,
@@ -316,6 +318,25 @@ export default function HomePage() {
       text: "ನಮಸ್ಕಾರ! ನಿಮ್ಮ ಕಬ್ಬಿನ ಬೆಳೆಗೆ ನಾನು ಹೇಗೆ ಸಹಾಯ ಮಾಡಬಲ್ಲೆ? \n\nNamaskara! How can I help with your Sugarcane crop today?",
     },
   ]);
+
+  useEffect(() => {
+    async function loadChat() {
+      const history = await getChatHistory();
+      if (history && history.length > 0) {
+        setMessages([
+          {
+            role: "model",
+            text: "ನಮಸ್ಕಾರ! ನಿಮ್ಮ ಕಬ್ಬಿನ ಬೆಳೆಗೆ ನಾನು ಹೇಗೆ ಸಹಾಯ ಮಾಡಬಲ್ಲೆ? \n\nNamaskara! How can I help with your Sugarcane crop today?",
+          },
+          ...history.map(msg => ({
+            role: msg.role as "user" | "model",
+            text: msg.text
+          }))
+        ]);
+      }
+    }
+    void loadChat();
+  }, []);
   const [chatInput, setChatInput] = useState<string>("");
   const [loadingChat, setLoadingChat] = useState<boolean>(false);
   const [ttsEnabled, setTtsEnabled] = useState<boolean>(true);
@@ -945,7 +966,7 @@ export default function HomePage() {
   };
 
   const getDisplayMessageText = (msg: { role: "user" | "model"; text: string }, idx: number) => {
-    if (idx === 0) {
+    if (idx === 0 && msg.role === "model") {
       const primaryCrop = activeProfile?.crops ? activeProfile.crops.split(",")[0] : "";
       if (lang === "kn") {
         const cropText = primaryCrop === "Sugarcane" ? "ಕಬ್ಬಿನ" : 
@@ -999,8 +1020,10 @@ export default function HomePage() {
     setLoadingChat(true);
 
     try {
+      void saveChatMessage("user", input);
       const weatherText = getWeatherText(weatherSim, lang);
       const answer = await askAI(activeProfile.id, weatherText, input, messages, lang);
+      void saveChatMessage("model", answer);
       setMessages((prev) => {
         const updated = [...prev, { role: "model" as const, text: answer }];
         if (ttsEnabled) {

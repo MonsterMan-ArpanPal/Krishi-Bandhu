@@ -143,6 +143,14 @@ exports.Prisma.FarmActivityLogScalarFieldEnum = {
   timestamp: 'timestamp'
 };
 
+exports.Prisma.ChatMessageScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  role: 'role',
+  text: 'text',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -156,7 +164,8 @@ exports.Prisma.QueryMode = {
 
 exports.Prisma.ModelName = {
   FarmerProfile: 'FarmerProfile',
-  FarmActivityLog: 'FarmActivityLog'
+  FarmActivityLog: 'FarmActivityLog',
+  ChatMessage: 'ChatMessage'
 };
 
 /**
