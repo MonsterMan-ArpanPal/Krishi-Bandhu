@@ -39,15 +39,17 @@ import {
   getLogs,
   addLogEntry,
   deleteLogEntry,
-  askAI,
   getAIAdvisory,
   analyzeTelemetry,
+  getLiveMandiPrices,
+  askAI,
 } from "~/server/actions";
 import {
   karnatakaDistricts,
   cropOptions,
   apmcPrices,
   governmentSchemes,
+  type APMCPrice,
 } from "~/data/shared-data";
 
 // Bilingual Dictionary matching the premium styling
@@ -341,6 +343,10 @@ export default function HomePage() {
   const [soilScientistInsight, setSoilScientistInsight] = useState<string>("");
   const [loadingSoilInsight, setLoadingSoilInsight] = useState<boolean>(false);
 
+  // Live Mandi Prices State
+  const [mandiPricesList, setMandiPricesList] = useState<APMCPrice[]>(apmcPrices);
+  const [loadingMandi, setLoadingMandi] = useState<boolean>(true);
+
   const [showToast, setShowToast] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string>("");
   const liveConnectedRef = useRef(false);
@@ -394,6 +400,22 @@ export default function HomePage() {
       }
     }
     void loadData();
+  }, []);
+
+  // Fetch live Mandi/APMC prices on mount
+  useEffect(() => {
+    async function loadMandiPrices() {
+      setLoadingMandi(true);
+      try {
+        const livePrices = await getLiveMandiPrices();
+        setMandiPricesList(livePrices);
+      } catch (err) {
+        console.error("Error loading live mandi prices in component:", err);
+      } finally {
+        setLoadingMandi(false);
+      }
+    }
+    void loadMandiPrices();
   }, []);
 
   const getSoilHealthScore = (moisture: number, temp: number, humidity: number, light: number) => {
@@ -1455,34 +1477,63 @@ export default function HomePage() {
                     <div className="flex items-center gap-2">
                       <Store size={18} className="text-[#1B835E]" />
                       <h3 className="text-sm font-extrabold text-[#191c1b] uppercase tracking-wider">{t[lang].priceTicker}</h3>
+                      {!loadingMandi && (
+                        <span className="flex items-center gap-1 bg-emerald-50 text-emerald-700 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border border-emerald-200">
+                          <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+                          LIVE
+                        </span>
+                      )}
                     </div>
                     <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{t[lang].apmcFeed}</span>
                   </div>
 
                   <div className="flex overflow-x-auto gap-4 pb-2 snap-x hide-scrollbar scroll-smooth">
-                    {apmcPrices.map((item, idx) => (
-                      <div 
-                        key={idx} 
-                        className="min-w-[210px] bg-surface-container-lowest rounded-xl p-4 snap-center shrink-0 flex flex-col justify-between hover:border-[#1B835E]/40 border border-surface-container transition-all shadow-sm"
-                      >
-                        <div className="flex justify-between items-start gap-2">
-                          <span className="font-bold text-xs text-[#191c1b] truncate">{item.crop[lang]}</span>
-                          {item.trend === "up" && <TrendingUp size={14} className="text-emerald-600 shrink-0" />}
-                          {item.trend === "down" && <TrendingUp size={14} className="text-red-500 rotate-90 shrink-0" />}
-                          {item.trend === "stable" && <ChevronRight size={14} className="text-slate-400 shrink-0" />}
-                        </div>
+                    {loadingMandi ? (
+                      Array.from({ length: 4 }).map((_, idx) => (
+                        <div 
+                          key={idx} 
+                          className="min-w-[210px] min-h-[120px] bg-surface-container-lowest rounded-xl p-4 snap-center shrink-0 flex flex-col justify-between border border-surface-container transition-all shadow-sm animate-pulse"
+                        >
+                          <div className="flex justify-between items-start gap-2">
+                            <div className="h-4 w-24 bg-slate-200 rounded"></div>
+                            <div className="h-4 w-4 bg-slate-200 rounded-full"></div>
+                          </div>
 
-                        <div className="mt-3">
-                          <span className="text-2xl font-extrabold text-[#1B835E]">{item.price}</span>
-                          <span className="text-[#404943] text-xs font-semibold"> {item.unit[lang]}</span>
-                        </div>
+                          <div className="mt-3">
+                            <div className="h-8 w-20 bg-slate-200 rounded"></div>
+                          </div>
 
-                        <div className="mt-2 text-[10px] font-semibold text-slate-400 flex items-center justify-between border-t border-glass-stroke pt-2">
-                          <span>{item.market[lang]}</span>
-                          <span>{item.time[lang]}</span>
+                          <div className="mt-2 text-[10px] font-semibold text-slate-400 flex items-center justify-between border-t border-glass-stroke pt-2">
+                            <div className="h-3 w-16 bg-slate-200 rounded"></div>
+                            <div className="h-3 w-12 bg-slate-200 rounded"></div>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))
+                    ) : (
+                      mandiPricesList.map((item, idx) => (
+                        <div 
+                          key={idx} 
+                          className="min-w-[210px] min-h-[120px] bg-surface-container-lowest rounded-xl p-4 snap-center shrink-0 flex flex-col justify-between hover:border-[#1B835E]/40 hover:shadow-md border border-surface-container transition-all shadow-sm"
+                        >
+                          <div className="flex justify-between items-start gap-2">
+                            <span className="font-bold text-xs text-[#191c1b] truncate">{item.crop[lang]}</span>
+                            {item.trend === "up" && <TrendingUp size={14} className="text-emerald-600 shrink-0" />}
+                            {item.trend === "down" && <TrendingUp size={14} className="text-red-500 rotate-180 shrink-0" />}
+                            {item.trend === "stable" && <ChevronRight size={14} className="text-slate-400 shrink-0" />}
+                          </div>
+
+                          <div className="mt-3">
+                            <span className="text-2xl font-extrabold text-[#1B835E]">{item.price}</span>
+                            <span className="text-[#404943] text-xs font-semibold"> {item.unit[lang]}</span>
+                          </div>
+
+                          <div className="mt-2 text-[10px] font-semibold text-slate-400 flex items-center justify-between border-t border-glass-stroke pt-2">
+                            <span>{item.market[lang]}</span>
+                            <span>{item.time[lang]}</span>
+                          </div>
+                        </div>
+                      ))
+                    )}
                   </div>
                 </div>
 
