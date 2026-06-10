@@ -138,7 +138,7 @@ export default function LoginPage() {
       {/* Right Side: Typography & Quote */}
       <div className="relative z-10 hidden lg:flex flex-col justify-center px-12 xl:px-24">
         <h2 className="text-4xl xl:text-5xl font-serif text-[#0e3b2a] leading-[1.15] mb-12 tracking-tight">
-          "The true foundation of our nation is in the hands that tend the soil."
+          &quot;The true foundation of our nation is in the hands that tend the soil.&quot;
         </h2>
         
         <div className="space-y-6 text-[#224f3c] font-medium text-lg xl:text-xl leading-relaxed max-w-2xl">
